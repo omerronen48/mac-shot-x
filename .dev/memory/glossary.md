@@ -9,3 +9,7 @@
 - **Quick-Access Overlay** — the floating post-capture hub; editor/pin/OCR/save are actions off it.
 - **TCC** — macOS Transparency, Consent & Control; the screen-recording permission the app needs.
 - **ScreenCaptureKit** — modern Apple capture API used instead of deprecated CGWindowListCreateImage.
+- **Quick-Access Panel** — the floating NSPanel shown after each capture with instant actions (copy/save/delete/drag/pin). The overlay hub.
+- **OverlayStack** — pure model (MacShotCore) governing which post-capture panels are visible, their order, auto-expiry, and the visible cap.
+- **HistoryStore / HistoryEntry** — folder-of-PNGs history: store lists the save dir into entries (url, filename, date, isPinned); no database.
+- **PinStore** — persists pinned screenshot paths in UserDefaults (a list, no DB).
