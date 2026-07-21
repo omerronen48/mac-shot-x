@@ -4,3 +4,7 @@ DerivedData/
 *.xcuserstate
 .dev/auto-resume
 .dev/auto.lock
+MacShot.app/
+*.dmg
+Scripts/AppIcon.icns
+Scripts/AppIcon.iconset/
