@@ -109,7 +109,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.runCapture(mode: mode)
             }
         }
-        if let ocrSpec = try? HotkeySpec(string: "⌃⌘⇧O") {
+        if let ocrSpec = try? HotkeySpec(string: prefs.ocrHotkey) {
             hotkeyManager.register(ocrSpec, id: 4) { [weak self] in
                 Task { await self?.ocrCoordinator?.run() }
             }

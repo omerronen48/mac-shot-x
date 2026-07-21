@@ -27,6 +27,7 @@ final class PreferencesModel: ObservableObject {
         areaHotkey        = p.areaHotkey
         windowHotkey      = p.windowHotkey
         fullscreenHotkey  = p.fullscreenHotkey
+        ocrHotkey         = p.ocrHotkey
     }
 
     func commitDirectory(_ path: String) {
@@ -66,6 +67,7 @@ final class PreferencesModel: ObservableObject {
     }
 
     func recordOCR(_ spec: HotkeySpec) {
+        prefs.ocrHotkey = spec.description   // persist so registerHotkeys() picks it up
         ocrHotkey = spec.description
         onHotkeysChanged?()
     }

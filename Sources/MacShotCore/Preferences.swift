@@ -43,4 +43,5 @@ public struct Preferences {
     public var areaHotkey: String { get { s("hotkey.area", "⌘⇧2") } nonmutating set { store.set(newValue, forKey: "hotkey.area") } }
     public var windowHotkey: String { get { s("hotkey.window", "⌃⌘⇧2") } nonmutating set { store.set(newValue, forKey: "hotkey.window") } }
     public var fullscreenHotkey: String { get { s("hotkey.fullscreen", "⌃⌘⇧3") } nonmutating set { store.set(newValue, forKey: "hotkey.fullscreen") } }
+    public var ocrHotkey: String { get { s("hotkey.ocr", "⌃⌘⇧O") } nonmutating set { store.set(newValue, forKey: "hotkey.ocr") } }
 }
