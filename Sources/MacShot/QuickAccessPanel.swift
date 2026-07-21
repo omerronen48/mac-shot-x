@@ -68,6 +68,12 @@ private final class PanelContentView: NSView {
         let imageView = DraggableImageView(result: result)
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.onDragStarted = { [weak self] in self?.onAction(.dragStarted) }
+        // Don't let the thumbnail's intrinsic size drive layout — otherwise the content view (and
+        // window) grows to the image width (~480px) and hangs off the screen edge, clipped.
+        imageView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        imageView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        imageView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        imageView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         addSubview(imageView)
 
         let buttons = makeButtonRow()
@@ -75,6 +81,11 @@ private final class PanelContentView: NSView {
         addSubview(buttons)
 
         NSLayoutConstraint.activate([
+            // Hard-lock the panel content to a constant size so nothing (image intrinsic size)
+            // can grow the window — the window sizes to this fitting size.
+            widthAnchor.constraint(equalToConstant: 224),
+            heightAnchor.constraint(equalToConstant: 180),
+
             imageView.topAnchor.constraint(equalTo: topAnchor, constant: 8),
             imageView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
             imageView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
