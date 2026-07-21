@@ -6,5 +6,6 @@ DerivedData/
 .dev/auto.lock
 MacShot.app/
 *.dmg
+!MacShot.dmg          # the committed release DMG is tracked; other/temp .dmg files are not
 Scripts/AppIcon.icns
 Scripts/AppIcon.iconset/

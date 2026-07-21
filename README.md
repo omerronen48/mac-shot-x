@@ -15,6 +15,15 @@ A free, native, on-device macOS screenshot tool. Runs in the menu bar — no doc
 - macOS 14 (Sonoma) or later
 - Apple Silicon or Intel (universal binary)
 
+## Download
+
+A prebuilt **[`MacShot.dmg`](MacShot.dmg)** is in the repo — download it, open the DMG, and
+drag **MacShot** into **Applications**. It is signed but not notarized, so the first launch
+needs **right-click → Open** (Gatekeeper), then grant **Screen Recording** when prompted.
+
+Rebuild the DMG yourself anytime with `bash Scripts/make_dmg.sh`. Tagging a release
+(`v*`) also publishes a fresh DMG via GitHub Actions (see `.github/workflows/release.yml`).
+
 ## Build from Source
 
 ```bash
