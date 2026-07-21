@@ -212,3 +212,9 @@ phase<M1>/review-T15: PASS [auto]. Scripts/Info.plist (8 keys, LSUIElement real 
 - Multi-line/column handling (open Q): assembler clusters observations into columns by x-position gaps, orders columns left→right, lines within a column top→bottom. Reversible.
 - New OCR hotkey default `⌃⌘⇧O` + "Capture Text (OCR)" menu item. Wired in AppDelegate alongside the M1 capture hotkeys.
 - Vision coordinate note: VNRecognizedTextObservation boundingBox is normalized (0–1, origin bottom-left); `VisionOCRService` converts to the assembler's pixel-space CGRect before assembly.
+
+### phase5/plan (M5) — all `[auto]`
+- 5 tasks, 4 waves, peak parallelism 2 (W2: assembler ‖ Vision). Plan: docs/plans/2026-07-21-m5-ocr.md.
+- Executor bases worktree on `exec/m4-beautify-20260721` (stacked; no-merge). M5 truly depends on M1 only; M2–M4 ride the stack untouched.
+- No flaky Vision-on-synthetic-pixels test — the deterministic `OCRTextAssembler` carries all automated coverage; `VisionOCRService` is build+manual gated.
+- Assembler reading order uses bottom-left-origin y (Vision convention): larger midY = higher on screen = earlier.

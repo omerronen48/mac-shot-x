@@ -12,7 +12,7 @@ Mode: `--auto` (unattended). Source roadmap: `docs/roadmaps/2026-07-21-macshot.m
 | M2 | Quick-access overlay & history | done | branch `exec/m2-overlay-history-20260721` @ e1c1dc2; 29/29 tests; stacked on M1; unmerged |
 | M3 | Annotation editor | done | branch `exec/m3-annotation-editor-20260721` @ 57adb15 (git-verified); 47/47 tests; stacked on M2; unmerged |
 | M4 | Beautify | done | branch `exec/m4-beautify-20260721` @ 8130bb0 (git-verified); 66/66 tests; stacked on M3; unmerged |
-| M5 | OCR | pending | depends M1 (parallel-safe with M3/M4) |
+| M5 | OCR | planned | plan: docs/plans/2026-07-21-m5-ocr.md (5 tasks); stacked on M4 branch |
 | M6 | Ship | pending | depends M1–M5 |
 
 ## Log
