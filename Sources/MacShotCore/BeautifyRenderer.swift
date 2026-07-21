@@ -22,11 +22,14 @@ public enum BeautifyRenderer {
 
         // Clamp scale so neither dimension exceeds 8192 pixels
         var scale = style.scale
+        let rawW0 = unscaledW * scale
+        let rawH0 = unscaledH * scale
+        if rawW0 > kMaxDimension || rawH0 > kMaxDimension {
+            scale = kMaxDimension / max(rawW0, rawH0) * scale
+        }
+        // Recompute after clamp so pixelW/H reflect the reduced scale
         let rawW = unscaledW * scale
         let rawH = unscaledH * scale
-        if rawW > kMaxDimension || rawH > kMaxDimension {
-            scale = kMaxDimension / max(rawW, rawH) * scale
-        }
 
         let pixelW = Int(rawW.rounded())
         let pixelH = Int(rawH.rounded())
@@ -117,14 +120,13 @@ public enum BeautifyRenderer {
 
         case .image(let path):
             let fallback = RGBAColor(r: 0.5, g: 0.5, b: 0.5, a: 1)
-            guard let url = URL(string: "file://\(path)"),
-                  let src = CGImageSourceCreateWithURL(url as CFURL, nil),
+            guard let src = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil),
                   let bgImg = CGImageSourceCreateImageAtIndex(src, 0, nil) else {
                 ctx.setFillColor(fallback.cgColor)
                 ctx.fill(rect)
                 return
             }
-            // Aspect-fill: scale to cover, center, clip
+            // Aspect-fill: scale to cover, center, clip — isolated in its own GState
             let imgW = CGFloat(bgImg.width), imgH = CGFloat(bgImg.height)
             let scaleX = rect.width  / imgW
             let scaleY = rect.height / imgH
@@ -132,8 +134,10 @@ public enum BeautifyRenderer {
             let drawW  = imgW * fill, drawH = imgH * fill
             let drawX  = rect.minX + (rect.width  - drawW) / 2
             let drawY  = rect.minY + (rect.height - drawH) / 2
+            ctx.saveGState()
             ctx.clip(to: rect)
             ctx.draw(bgImg, in: CGRect(x: drawX, y: drawY, width: drawW, height: drawH))
+            ctx.restoreGState()
         }
     }
 }

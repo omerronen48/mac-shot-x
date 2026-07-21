@@ -120,4 +120,16 @@ final class BeautifyRendererTests: XCTestCase {
         // Single-color gradient treated as solid — corner should be red
         assertPixel(out, 0, 0, r: 255, g: 0, b: 0, tol: 5)
     }
+
+    // MARK: – 8192 CLAMP
+
+    func testClampLargeScaleStaysWithin8192() {
+        // 20x20 image + 0 padding; scale=1000 → raw 20000px — must be clamped to ≤8192
+        let img = solidImage(20, 20, r: 1, g: 0, b: 0)
+        let style = BeautifyStyle(background: .solid(.white), padding: 0, cornerRadius: 0, shadow: nil, scale: 1000)
+        let out = BeautifyRenderer.render(image: img, style: style)
+        XCTAssertLessThanOrEqual(max(out.width, out.height), 8192, "clamped max dimension should be ≤8192")
+        XCTAssertGreaterThan(out.width,  0, "output must be non-degenerate")
+        XCTAssertGreaterThan(out.height, 0, "output must be non-degenerate")
+    }
 }
