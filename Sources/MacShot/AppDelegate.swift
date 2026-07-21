@@ -143,7 +143,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func fetchWindowList() async throws -> [(CGWindowID, CGRect)] {
         let content = try await SCShareableContent.current
-        return content.windows.map { ($0.windowID, $0.frame) }
+        // SCWindow.frame is TOP-LEFT-origin global points; the overlay hit-tests in Cocoa
+        // bottom-left global points. Flip Y against the primary display's height. Also keep
+        // only real, on-screen app windows (layer 0) — excludes desktop/menubar/Dock/tiny —
+        // so window picking can't fall through to the full-screen wallpaper. Front-to-back order
+        // is preserved so the overlay picks the topmost window under the cursor.
+        let primaryHeight = NSScreen.screens.first(where: { $0.frame.origin == .zero })?.frame.height
+            ?? NSScreen.main?.frame.height ?? 0
+        return content.windows
+            .filter { $0.isOnScreen && $0.windowLayer == 0 && $0.frame.width >= 40 && $0.frame.height >= 40 }
+            .map { w in
+                let f = w.frame
+                let cocoa = CGRect(x: f.origin.x, y: primaryHeight - f.origin.y - f.height,
+                                   width: f.width, height: f.height)
+                return (w.windowID, cocoa)
+            }
     }
 
     // ponytail: bridge completion-handler API to async via continuation

@@ -157,9 +157,11 @@ private final class DraggableImageView: NSImageView, NSDraggingSource {
     init(result: CaptureResult) {
         self.result = result
         super.init(frame: .zero)
-        let nsImage = NSImage(cgImage: result.image, size: result.size)
-        self.image = nsImage
+        // size .zero → NSImage adopts the CGImage's own pixel dimensions; the image view then
+        // aspect-fits it (centered) inside its 208x120 box so the whole shot is visible.
+        self.image = NSImage(cgImage: result.image, size: .zero)
         imageScaling = .scaleProportionallyUpOrDown
+        imageAlignment = .alignCenter
         wantsLayer = true
         layer?.cornerRadius = 8
         layer?.masksToBounds = true
