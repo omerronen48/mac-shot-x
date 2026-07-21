@@ -8,7 +8,7 @@ Mode: `--auto` (unattended). Source roadmap: `docs/roadmaps/2026-07-21-macshot.m
 
 | # | Phase | Status | Notes |
 |---|-------|--------|-------|
-| M1 | Capture core | pending | menu-bar app that replaces ⌘⇧4 for daily use |
+| M1 | Capture core | planned | plan: docs/plans/2026-07-21-m1-capture-core.md (15 tasks, 6 waves) |
 | M2 | Quick-access overlay & history | pending | depends M1 |
 | M3 | Annotation editor | pending | depends M2 |
 | M4 | Beautify | pending | depends M3 |

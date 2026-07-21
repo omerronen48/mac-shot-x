@@ -29,3 +29,9 @@ Chronological log. Tags: `[interactive]` `[auto]` `[escalated]`.
 - Hotkey defaults (avoid system ⌘⇧3/4/5/6 range; user rebinds in M6): Area `⌘⇧2`, Window `⌃⌘⇧2`, Fullscreen `⌃⌘⇧3`. Placeholders. Reversible.
 - After-capture behavior default: copy to clipboard AND save file to save dir, then post a `UserNotifications` banner. No overlay/editor (out of scope M1). Reversible.
 - Prefs storage: `UserDefaults` (save dir bookmark, filename format string, capture hotkeys, after-capture toggle). Rationale: matches roadmap "PNG files + UserDefaults, no DB".
+
+### phase1/plan (M1 — Capture core) — all `[auto]`
+- Extracted `SelectionGeometry` (drag→rect/clamp/min-size) into `MacShotCore` so overlay math is unit-tested and the AppKit overlay stays a renderer. Testable core vs manually-verified GUI shell is the plan's verification split.
+- GUI-shell tasks (T8–T14) gate on `swift build` + a manual-smoke checklist item, not fabricated unit tests — AppKit/ScreenCaptureKit/Carbon/TCC can't run in headless `swift test`. TDD-before-commit is strict for `MacShotCore` (T2–T7).
+- 15 tasks, 6 waves; peak parallelism 6 (W4 GUI shell). Plan: `docs/plans/2026-07-21-m1-capture-core.md`.
+- Universal binary via `swift build -c release --arch arm64 --arch x86_64`; ad-hoc codesign for local dev (Developer ID signing deferred to M6).
