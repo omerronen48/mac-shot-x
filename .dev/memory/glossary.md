@@ -21,3 +21,7 @@
 - **BeautifyStyle** — share-ready export styling (background, padding, corner radius, shadow, export scale), applied at export only; a Capture has 0..1. Codable.
 - **BeautifyRenderer** — composites a source image onto a padded/styled background (CGContext + CGGradient); headless-testable.
 - **BeautifyPreset / PresetStore** — named saved BeautifyStyles persisted in UserDefaults (over KeyValueStore); ships with built-in backgrounds.
+- **OCRObservation** — one recognized text fragment: string + bounding box (pixel space) + confidence. AppKit/Vision-free value in MacShotCore.
+- **OCRTextAssembler** — pure logic ordering observations into final text (reading order, multi-column aware); headless-tested.
+- **OCRService / VisionOCRService** — protocol + Vision-framework impl (on-device VNRecognizeTextRequest, language auto-detect).
+- **OCRCoordinator** — sibling capture flow: area-select → capture region → recognize → assemble → clipboard + notification. Bypasses CaptureEngine.
