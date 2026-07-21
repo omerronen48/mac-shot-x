@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import MacShotCore
 import ScreenCaptureKit
@@ -33,7 +34,13 @@ struct SCKScreenCapturer: ScreenCapturer {
             let display = try resolveDisplay(nil, from: content)
             let full = try await captureDisplay(display)
             guard let rect else { return full }
-            guard let cropped = full.cropping(to: rect) else { throw CaptureError.noTarget }
+            // `rect` is in display POINTS (top-left origin). Scale to the captured image's pixel
+            // space via the actual image/point ratio so it's correct at any backing scale.
+            let sx = CGFloat(full.width) / CGFloat(display.width)
+            let sy = CGFloat(full.height) / CGFloat(display.height)
+            let px = CGRect(x: rect.minX * sx, y: rect.minY * sy,
+                            width: rect.width * sx, height: rect.height * sy).integral
+            guard let cropped = full.cropping(to: px) else { throw CaptureError.noTarget }
             return cropped
         }
     }
@@ -58,8 +65,17 @@ struct SCKScreenCapturer: ScreenCapturer {
     private func captureDisplay(_ display: SCDisplay) async throws -> CGImage {
         let filter = SCContentFilter(display: display, excludingWindows: [])
         let config = SCStreamConfiguration()
-        config.width = display.width
-        config.height = display.height
+        // Capture at native pixel resolution (SCDisplay.width/height are points). Retina-sharp;
+        // the area crop rescales points→pixels via the image/point ratio so it stays correct.
+        let scale = displayScale(display.displayID)
+        config.width = Int(CGFloat(display.width) * scale)
+        config.height = Int(CGFloat(display.height) * scale)
         return try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+    }
+
+    private func displayScale(_ id: CGDirectDisplayID) -> CGFloat {
+        NSScreen.screens.first {
+            ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID) == id
+        }?.backingScaleFactor ?? 2
     }
 }

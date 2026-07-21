@@ -198,7 +198,7 @@ private final class OverlayView: NSView {
         let sel = SelectionGeometry.rect(from: s, to: c)
         let clamped = SelectionGeometry.clamp(sel, to: screenFrameInView)
         guard let valid = SelectionGeometry.validated(clamped, minSide: 5) else { completion(nil); return }
-        completion(.area(viewRectToDisplayPixels(valid)))
+        completion(.area(selectionRectInDisplayPoints(valid)))
     }
 
     override func mouseMoved(with event: NSEvent) {
@@ -318,15 +318,16 @@ private final class OverlayView: NSView {
 
     // MARK: Coordinate conversion
 
-    private func viewRectToDisplayPixels(_ viewRect: CGRect) -> CGRect {
-        // viewRect is in view/window coords (origin at screen.frame.origin in flipped global space)
-        let scale = screen.backingScaleFactor
-        let sOrigin = screen.frame.origin
-        return CGRect(
-            x: (viewRect.origin.x + sOrigin.x) * scale,
-            y: (viewRect.origin.y + sOrigin.y) * scale,
-            width: viewRect.width * scale,
-            height: viewRect.height * scale
+    /// Convert the selection from overlay-local points (bottom-left origin) into the display's
+    /// top-left-origin POINT space — what the capturer expects. The capturer scales points→pixels
+    /// by the captured image's pixel/point ratio, so this stays Retina-correct. The overlay window
+    /// fills its screen, so coordinates are already display-local (no global offset needed).
+    private func selectionRectInDisplayPoints(_ viewRect: CGRect) -> CGRect {
+        CGRect(
+            x: viewRect.minX,
+            y: screen.frame.height - viewRect.maxY,   // flip bottom-left → top-left
+            width: viewRect.width,
+            height: viewRect.height
         )
     }
 }
