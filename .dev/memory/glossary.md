@@ -13,3 +13,8 @@
 - **OverlayStack** — pure model (MacShotCore) governing which post-capture panels are visible, their order, auto-expiry, and the visible cap.
 - **HistoryStore / HistoryEntry** — folder-of-PNGs history: store lists the save dir into entries (url, filename, date, isPinned); no database.
 - **PinStore** — persists pinned screenshot paths in UserDefaults (a list, no DB).
+- **Annotation / AnnotationKind** — a non-destructive vector markup element (arrow/rect/ellipse/text/highlighter/blur/step) with geometry + style, belonging to a Capture.
+- **AnnotationDocument** — ordered list of Annotations (z-order) over a base image; the editable truth until export. Codable; in-memory in M3.
+- **AnnotationRenderer** — flattens base image + AnnotationDocument into a composited CGImage (CoreGraphics + CoreImage); headless-testable.
+- **RGBAColor** — AppKit-free color value (r,g,b,a) in MacShotCore, converted to CGColor at render time.
+- **UndoStack** — snapshot-based undo/redo over the annotation array.
