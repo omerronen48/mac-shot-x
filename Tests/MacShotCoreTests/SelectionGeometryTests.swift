@@ -10,7 +10,7 @@ final class SelectionGeometryTests: XCTestCase {
     func testClampToBounds() {
         let bounds = CGRect(x: 0, y: 0, width: 200, height: 200)
         let r = SelectionGeometry.rect(from: CGPoint(x: -10, y: -10), to: CGPoint(x: 250, y: 100))
-        XCTAssertEqual(SelectionGeometry.clamp(r, to: bounds), CGRect(x: 0, y: 0, width: 200, height: 110))
+        XCTAssertEqual(SelectionGeometry.clamp(r, to: bounds), CGRect(x: 0, y: 0, width: 200, height: 100))
     }
     func testTooSmallIsNil() {
         XCTAssertNil(SelectionGeometry.validated(CGRect(x: 0, y: 0, width: 3, height: 3), minSide: 5))

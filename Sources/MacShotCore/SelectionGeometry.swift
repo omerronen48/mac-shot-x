@@ -8,12 +8,7 @@ public enum SelectionGeometry {
                width: abs(a.x - b.x), height: abs(a.y - b.y))
     }
     public static func clamp(_ r: CGRect, to bounds: CGRect) -> CGRect {
-        // ponytail: snap origin into bounds, then clip far edge; size only shrinks when far edge exceeds bounds
-        let x = max(r.minX, bounds.minX)
-        let y = max(r.minY, bounds.minY)
-        let w = min(r.width, bounds.maxX - x)
-        let h = min(r.height, bounds.maxY - y)
-        return CGRect(x: x, y: y, width: w, height: h)
+        r.intersection(bounds)
     }
     /// nil if either side is below `minSide` (treat as an accidental click).
     public static func validated(_ r: CGRect, minSide: CGFloat) -> CGRect? {
