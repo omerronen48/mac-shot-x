@@ -6,3 +6,5 @@ DerivedData/
 .dev/auto.lock
 MacShot.app/
 *.dmg
+Scripts/AppIcon.icns
+Scripts/AppIcon.iconset/

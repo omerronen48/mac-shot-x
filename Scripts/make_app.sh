@@ -19,6 +19,9 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARY" "$APP/Contents/MacOS/MacShot"
 cp "$SCRIPT_DIR/Info.plist" "$APP/Contents/Info.plist"
 
+if [ ! -f "$SCRIPT_DIR/AppIcon.icns" ]; then bash "$SCRIPT_DIR/make_icon.sh"; fi
+cp "$SCRIPT_DIR/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+
 echo "Signing ad-hoc..."
 codesign --force --deep --sign - "$APP"
 
