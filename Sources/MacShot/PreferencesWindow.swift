@@ -15,6 +15,8 @@ final class PreferencesModel: ObservableObject {
     @Published var areaHotkey: String
     @Published var windowHotkey: String
     @Published var fullscreenHotkey: String
+    // ponytail: no ocrHotkey in Preferences.swift (M5 skipped it); held in-memory only
+    @Published var ocrHotkey: String = "⌃⌘⇧O"
 
     init() {
         let p = Preferences(store: UserDefaults.standard)
@@ -45,10 +47,26 @@ final class PreferencesModel: ObservableObject {
         prefs.saveToFile = v
     }
 
-    func commitHotkey(area: String, window: String, fullscreen: String) {
-        if (try? HotkeySpec(string: area)) != nil       { prefs.areaHotkey       = area }
-        if (try? HotkeySpec(string: window)) != nil     { prefs.windowHotkey     = window }
-        if (try? HotkeySpec(string: fullscreen)) != nil { prefs.fullscreenHotkey = fullscreen }
+    func recordArea(_ spec: HotkeySpec) {
+        prefs.areaHotkey = spec.description
+        areaHotkey = spec.description
+        onHotkeysChanged?()
+    }
+
+    func recordWindow(_ spec: HotkeySpec) {
+        prefs.windowHotkey = spec.description
+        windowHotkey = spec.description
+        onHotkeysChanged?()
+    }
+
+    func recordFullscreen(_ spec: HotkeySpec) {
+        prefs.fullscreenHotkey = spec.description
+        fullscreenHotkey = spec.description
+        onHotkeysChanged?()
+    }
+
+    func recordOCR(_ spec: HotkeySpec) {
+        ocrHotkey = spec.description
         onHotkeysChanged?()
     }
 }
@@ -56,18 +74,9 @@ final class PreferencesModel: ObservableObject {
 struct PreferencesView: View {
     @ObservedObject var model: PreferencesModel
 
-    // track what's been typed into hotkey fields before commit
-    @State private var areaText: String       = ""
-    @State private var windowText: String     = ""
-    @State private var fullscreenText: String = ""
-
     private var filenamePreview: String {
         FilenameFormatter(format: model.filenameFormat).filename(for: Date(), mode: "area")
     }
-
-    private var areaError: Bool       { !areaText.isEmpty       && (try? HotkeySpec(string: areaText)) == nil }
-    private var windowError: Bool     { !windowText.isEmpty     && (try? HotkeySpec(string: windowText)) == nil }
-    private var fullscreenError: Bool { !fullscreenText.isEmpty && (try? HotkeySpec(string: fullscreenText)) == nil }
 
     var body: some View {
         Form {
@@ -100,42 +109,32 @@ struct PreferencesView: View {
                     .onChange(of: model.saveToFile) { _, v in model.commitSaveToFile(v) }
             }
 
-            // Hotkey fields
-            Section("Hotkeys (e.g. ⌘⇧2)") {
-                hotkeyRow(label: "Area capture", text: $areaText, hasError: areaError)
-                hotkeyRow(label: "Window capture", text: $windowText, hasError: windowError)
-                hotkeyRow(label: "Full-screen capture", text: $fullscreenText, hasError: fullscreenError)
-                Button("Apply Hotkeys") {
-                    model.commitHotkey(area: areaText, window: windowText, fullscreen: fullscreenText)
+            // Hotkey recorder fields — click to record, Esc to cancel
+            Section("Hotkeys") {
+                hotkeyRow(label: "Area capture") {
+                    HotkeyRecorderField(current: model.areaHotkey) { model.recordArea($0) }
                 }
-                .disabled(areaError || windowError || fullscreenError)
+                hotkeyRow(label: "Window capture") {
+                    HotkeyRecorderField(current: model.windowHotkey) { model.recordWindow($0) }
+                }
+                hotkeyRow(label: "Full-screen capture") {
+                    HotkeyRecorderField(current: model.fullscreenHotkey) { model.recordFullscreen($0) }
+                }
+                hotkeyRow(label: "OCR capture") {
+                    HotkeyRecorderField(current: model.ocrHotkey) { model.recordOCR($0) }
+                }
             }
         }
         .formStyle(.grouped)
         .frame(minWidth: 440, minHeight: 360)
         .padding()
-        .onAppear {
-            // populate hotkey fields from current prefs
-            areaText       = model.areaHotkey
-            windowText     = model.windowHotkey
-            fullscreenText = model.fullscreenHotkey
-        }
     }
 
     @ViewBuilder
-    private func hotkeyRow(label: String, text: Binding<String>, hasError: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text(label).frame(width: 160, alignment: .leading)
-                TextField("", text: text)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 90)
-            }
-            if hasError {
-                Text("Invalid hotkey")
-                    .font(.caption)
-                    .foregroundColor(.red)
-            }
+    private func hotkeyRow<F: View>(label: String, @ViewBuilder field: () -> F) -> some View {
+        HStack {
+            Text(label).frame(width: 160, alignment: .leading)
+            field().frame(width: 140, height: 22)
         }
     }
 
@@ -158,7 +157,7 @@ public final class PreferencesWindowController {
     private var window: NSWindow?
     private let model = PreferencesModel()
 
-    /// Callback invoked after any valid hotkey edit and "Apply" press.
+    /// Callback invoked after any valid hotkey recording.
     public var onHotkeysChanged: (() -> Void)? {
         get { model.onHotkeysChanged }
         set { model.onHotkeysChanged = newValue }
