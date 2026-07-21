@@ -143,3 +143,9 @@ phase<M1>/review-T15: PASS [auto]. Scripts/Info.plist (8 keys, LSUIElement real 
 - Keyboard shortcuts (open Q): ⌘Z undo, ⌘⇧Z redo, ⌫ delete selection, V select, A arrow, R rect, O ellipse, T text, H highlighter, B blur, S step, Esc deselect, ⌘E export. Reversible.
 - Default styles (open Q): stroke red (#FF3B30) width 3; text 17pt red; highlighter yellow 40% alpha; blur radius 12 / pixelate 12px; step number white-on-red 24pt. Reversible.
 - **M2 integration:** add `.edit` to `PanelAction` (+ Edit button on QuickAccessPanel and per-item in HistoryWindow); `AppDelegate` `.edit` opens `EditorWindow` with the capture's CGImage.
+
+### phase3/plan (M3) — all `[auto]`
+- 9 tasks, 7 waves, peak parallelism 2 (W3 undo/document, W4 renderer/canvas). Plan: docs/plans/2026-07-21-m3-annotation-editor.md.
+- Executor bases worktree on `exec/m2-overlay-history-20260721` (stacked; no-merge).
+- Renderer flatten is the R2-critical path and is fully headless-TDD'd (pixel-sample + blur-diff asserts); live canvas blur is a cheap placeholder since true blur is export-only and tested there.
+- UndoStack is snapshot/caller-passes-current (not owning the array) — keeps it a pure value type decoupled from AnnotationDocument.

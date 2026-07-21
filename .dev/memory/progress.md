@@ -10,7 +10,7 @@ Mode: `--auto` (unattended). Source roadmap: `docs/roadmaps/2026-07-21-macshot.m
 |---|-------|--------|-------|
 | M1 | Capture core | done | branch `exec/m1-capture-core-20260721` @ 67197ac; 18/18 tests, .app built; unmerged (human) |
 | M2 | Quick-access overlay & history | done | branch `exec/m2-overlay-history-20260721` @ e1c1dc2; 29/29 tests; stacked on M1; unmerged |
-| M3 | Annotation editor | pending | depends M2 |
+| M3 | Annotation editor | planned | plan: docs/plans/2026-07-21-m3-annotation-editor.md (9 tasks); stacks on M2 branch |
 | M4 | Beautify | pending | depends M3 |
 | M5 | OCR | pending | depends M1 (parallel-safe with M3/M4) |
 | M6 | Ship | pending | depends M1–M5 |
