@@ -21,7 +21,10 @@ public struct HotkeySpec: Equatable, Sendable, CustomStringConvertible {
         [("⌃", .control), ("⌥", .option), ("⇧", .shift), ("⌘", .command)]
     // Minimal key label → Carbon virtual keycode map (extend as needed)
     static let keyCodes: [String: UInt32] = [
-        "1":18,"2":19,"3":20,"4":21,"5":23,"6":22,"7":26,"8":28,"9":25,"0":29
+        "1":18,"2":19,"3":20,"4":21,"5":23,"6":22,"7":26,"8":28,"9":25,"0":29,
+        "A":0,"B":11,"C":8,"D":2,"E":14,"F":3,"G":5,"H":4,"I":34,"J":38,
+        "K":40,"L":37,"M":46,"N":45,"O":31,"P":35,"Q":12,"R":15,"S":1,"T":17,
+        "U":32,"V":9,"W":13,"X":7,"Y":16,"Z":6
     ]
 
     public init(string: String) throws {

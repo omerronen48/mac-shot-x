@@ -16,6 +16,10 @@ final class HotkeySpecTests: XCTestCase {
     func testRejectsModifierOnly() {
         XCTAssertThrowsError(try HotkeySpec(string: "⌘⇧"))
     }
+    func testLetterKeyParses() throws {
+        let spec = try HotkeySpec(string: "⌃⌘⇧O")
+        XCTAssertEqual(spec.keyCode, 31) // kVK_ANSI_O
+    }
     func testCarbonModifierMaskIsStable() throws {
         // cmdKey=256, shiftKey=512 (Carbon constants); mask is their OR.
         let spec = try HotkeySpec(string: "⌘⇧2")
