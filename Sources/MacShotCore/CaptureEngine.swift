@@ -30,7 +30,8 @@ public struct CaptureEngine {
             }
             fileURL = try sink.writePNG(image, suggestedName: name, inDirectory: dir)
         }
-        return CaptureResult(mode: mode, fileURL: fileURL, copiedToClipboard: copied,
+        return CaptureResult(mode: mode, image: image, fileURL: fileURL,
+                             copiedToClipboard: copied,
                              size: CGSize(width: image.width, height: image.height))
     }
 }

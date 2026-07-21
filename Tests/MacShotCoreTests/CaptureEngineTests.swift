@@ -51,4 +51,10 @@ final class CaptureEngineTests: XCTestCase {
         XCTAssertEqual(sink.written.count, 0)
         XCTAssertNil(result.fileURL)
     }
+    func testResultCarriesCapturedImage() async throws {
+        let (engine, _, _) = makeEngine()
+        let result = try await engine.capture(.fullscreen(nil), at: Date(timeIntervalSince1970: 0))
+        XCTAssertEqual(result.image.width, 2)   // FakeCapturer returns a 2x2 image
+        XCTAssertEqual(result.image.height, 2)
+    }
 }
