@@ -157,9 +157,11 @@ private final class DraggableImageView: NSImageView, NSDraggingSource {
     init(result: CaptureResult) {
         self.result = result
         super.init(frame: .zero)
-        // size .zero → NSImage adopts the CGImage's own pixel dimensions; the image view then
-        // aspect-fits it (centered) inside its 208x120 box so the whole shot is visible.
-        self.image = NSImage(cgImage: result.image, size: .zero)
+        // Show a small, consistently-sized THUMBNAIL so window/fullscreen captures (huge native
+        // images) preview identically to area captures — a large CGImage in an NSImageView renders
+        // clipped/blank. Full-res result.image is still used for copy/drag/save.
+        let thumb = DraggableImageView.downsample(result.image, maxDim: 480)
+        self.image = NSImage(cgImage: thumb, size: NSSize(width: thumb.width, height: thumb.height))
         imageScaling = .scaleProportionallyUpOrDown
         imageAlignment = .alignCenter
         wantsLayer = true
@@ -169,6 +171,21 @@ private final class DraggableImageView: NSImageView, NSDraggingSource {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
+
+    /// Scale a CGImage down so its longest side is at most `maxDim` (never upscales).
+    /// Keeps preview rendering cheap + identical across capture sizes.
+    static func downsample(_ image: CGImage, maxDim: CGFloat) -> CGImage {
+        let iw = CGFloat(image.width), ih = CGFloat(image.height)
+        let s = min(maxDim / max(iw, ih), 1)
+        if s >= 1 { return image }
+        let w = max(1, Int(iw * s)), h = max(1, Int(ih * s))
+        guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return image }
+        ctx.interpolationQuality = .high
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+        return ctx.makeImage() ?? image
+    }
 
     // MARK: NSDraggingSource
 
