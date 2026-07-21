@@ -1,0 +1,33 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]           # push a tag like v0.1.0 to publish a DMG
+  workflow_dispatch:        # or run manually from the Actions tab
+
+permissions:
+  contents: write           # needed to create the Release + upload the DMG
+
+jobs:
+  dmg:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app || true
+      - name: Build tests
+        run: swift test
+      - name: Build DMG
+        run: bash Scripts/make_dmg.sh
+        # For a notarized, Gatekeeper-clean DMG, add repository secrets and pass them here:
+        #   DEVELOPER_ID_APP: ${{ secrets.DEVELOPER_ID_APP }}
+        #   AC_NOTARY_PROFILE: ${{ secrets.AC_NOTARY_PROFILE }}
+        # (the notary profile must be created in the runner keychain first).
+      - name: Upload DMG as a release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: MacShot.dmg
+      - name: Also upload as a build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MacShot-dmg
+          path: MacShot.dmg

@@ -1,34 +1,46 @@
 #!/usr/bin/env bash
+# Build a downloadable MacShot.dmg (drag-to-install). Works standalone:
+#   - always: builds MacShot.app (signed by make_app.sh with your available identity, else ad-hoc)
+#     and packages it into a DMG with an /Applications drop target.
+#   - if DEVELOPER_ID_APP + AC_NOTARY_PROFILE are set: also does hardened-runtime Developer-ID
+#     signing + notarization + stapling, producing a DMG that opens with no Gatekeeper warning.
 set -euo pipefail
-
-if [ -z "${DEVELOPER_ID_APP:-}" ]; then
-    echo "Error: DEVELOPER_ID_APP is not set. Export your Developer ID Application certificate name."
-    exit 1
-fi
-if [ -z "${AC_NOTARY_PROFILE:-}" ]; then
-    echo "Error: AC_NOTARY_PROFILE is not set. Export your notarytool keychain profile name."
-    exit 1
-fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-
 cd "$REPO_ROOT"
 
 echo "Building MacShot.app..."
 bash "$SCRIPT_DIR/make_app.sh"
 
-echo "Signing for distribution..."
-codesign --force --deep --options runtime --timestamp --sign "$DEVELOPER_ID_APP" MacShot.app
+# Optional distribution signing (hardened runtime) — only if a Developer ID is provided.
+if [ -n "${DEVELOPER_ID_APP:-}" ]; then
+  echo "Signing app for distribution with: $DEVELOPER_ID_APP"
+  codesign --force --deep --options runtime --timestamp --sign "$DEVELOPER_ID_APP" MacShot.app
+fi
+
+echo "Staging DMG contents..."
+STAGE="$(mktemp -d)"
+cp -R MacShot.app "$STAGE/"
+ln -s /Applications "$STAGE/Applications"   # drag-to-install target
 
 echo "Creating DMG..."
-hdiutil create -volname MacShot -srcfolder MacShot.app -ov -format UDZO MacShot.dmg
+rm -f MacShot.dmg
+hdiutil create -volname "MacShot" -srcfolder "$STAGE" -ov -format UDZO MacShot.dmg >/dev/null
+rm -rf "$STAGE"
 
-echo "Submitting for notarization..."
-xcrun notarytool submit MacShot.dmg --keychain-profile "$AC_NOTARY_PROFILE" --wait
-
-echo "Stapling notarization ticket..."
-xcrun stapler staple MacShot.dmg
-
-echo ""
-echo "DMG: $REPO_ROOT/MacShot.dmg — ready to distribute."
+# Optional notarization — only if both a Developer ID and a notary profile are provided.
+if [ -n "${DEVELOPER_ID_APP:-}" ] && [ -n "${AC_NOTARY_PROFILE:-}" ]; then
+  echo "Submitting for notarization (this can take a few minutes)..."
+  xcrun notarytool submit MacShot.dmg --keychain-profile "$AC_NOTARY_PROFILE" --wait
+  echo "Stapling notarization ticket..."
+  xcrun stapler staple MacShot.dmg
+  echo ""
+  echo "DMG: $REPO_ROOT/MacShot.dmg — notarized, ready to distribute to anyone."
+else
+  echo ""
+  echo "DMG: $REPO_ROOT/MacShot.dmg — built (not notarized)."
+  echo "Note: without a Developer ID + notarization, recipients open it via right-click → Open"
+  echo "the first time (Gatekeeper). For a warning-free build, set DEVELOPER_ID_APP and"
+  echo "AC_NOTARY_PROFILE and re-run."
+fi
