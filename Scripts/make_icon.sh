@@ -10,7 +10,11 @@ echo "Generating placeholder icon..."
 # Render 1024x1024 PNG using Swift + CoreGraphics
 swift - <<'SWIFT'
 import CoreGraphics
+import CoreText
 import Foundation
+import AppKit
+import ImageIO
+import UniformTypeIdentifiers
 
 let size = CGSize(width: 1024, height: 1024)
 let colorSpace = CGColorSpaceCreateDeviceRGB()
