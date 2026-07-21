@@ -22,8 +22,16 @@ cp "$SCRIPT_DIR/Info.plist" "$APP/Contents/Info.plist"
 if [ ! -f "$SCRIPT_DIR/AppIcon.icns" ]; then bash "$SCRIPT_DIR/make_icon.sh"; fi
 cp "$SCRIPT_DIR/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 
-echo "Signing ad-hoc..."
-codesign --force --deep --sign - "$APP"
+# Prefer a stable local code-signing identity if one exists (keeps the TCC/Screen-Recording
+# grant across rebuilds); otherwise fall back to ad-hoc. Override with MACSHOT_SIGN_ID.
+SIGN_ID="${MACSHOT_SIGN_ID:-MacShot Dev}"
+if security find-identity -v -p codesigning 2>/dev/null | grep -q "$SIGN_ID"; then
+  echo "Signing with identity: $SIGN_ID"
+  codesign --force --deep --sign "$SIGN_ID" "$APP"
+else
+  echo "Signing ad-hoc (no '$SIGN_ID' identity; Screen-Recording grant resets each rebuild)..."
+  codesign --force --deep --sign - "$APP"
+fi
 
 echo ""
 echo "Built: $APP"
