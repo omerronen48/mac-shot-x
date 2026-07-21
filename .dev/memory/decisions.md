@@ -178,3 +178,9 @@ phase<M1>/review-T15: PASS [auto]. Scripts/Info.plist (8 keys, LSUIElement real 
 - Export size options (open Q): scale 1×/2×/3×, default 2×. Reversible.
 - Preset management (open Q): dropdown Load + "Save current as…" + Delete; presets in UserDefaults via PresetStore. Reversible.
 - GUI shell (manual gate): `BeautifyPanel` (bg type/color/gradient/image, padding, corner, shadow toggle+controls, preset dropdown, scale selector), added to `EditorWindow`.
+
+### phase4/plan (M4) — all `[auto]`
+- 6 tasks, 4 waves, peak parallelism 3 (W2: renderer, presets, canvas). Plan: docs/plans/2026-07-21-m4-beautify.md.
+- Executor bases worktree on `exec/m3-annotation-editor-20260721` (stacked; no-merge).
+- `BeautifyPreset` struct defined in T1's BeautifyStyle.swift (not T3) so `BeautifyStyle.builtins` compiles without a cross-file forward reference; T3 adds only `PresetStore`.
+- Export pipeline order: flatten annotations (M3) → beautify wrap (M4) → clipboard + new PNG. `.none` renders passthrough so M3 behavior is preserved with zero special-casing.
