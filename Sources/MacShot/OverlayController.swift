@@ -60,14 +60,22 @@ public final class OverlayController {
         let visible = stack.visible(at: Date())
         let visibleIDs = Set(visible.map(\.id))
 
-        // position visible panels
-        let frame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
-        let panelWidth: CGFloat = 224
+        // Position on the screen under the cursor (where the capture happened), clamped fully
+        // inside its visibleFrame so nothing is hidden behind a screen edge or the Dock.
+        // NSScreen.main can be nil for a menu-bar accessory app, and the old 1440x900 fallback
+        // pushed the panel off narrow displays — clamp against the panel's real size instead.
+        let mouse = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) }
+            ?? NSScreen.main ?? NSScreen.screens.first
+        let frame = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
 
         for slot in visible {
             guard let panel = panels[slot.id] else { continue }
-            let x = frame.maxX - panelWidth - edgeMargin
-            let y = frame.minY + edgeMargin + CGFloat(slot.index) * (panelHeight + gap)
+            let size = panel.frame.size
+            var x = frame.maxX - size.width - edgeMargin
+            var y = frame.minY + edgeMargin + CGFloat(slot.index) * (panelHeight + gap)
+            x = max(frame.minX + edgeMargin, min(x, frame.maxX - size.width - edgeMargin))
+            y = max(frame.minY + edgeMargin, min(y, frame.maxY - size.height - edgeMargin))
             panel.setFrameOrigin(NSPoint(x: x, y: y))
             if !panel.isVisible { panel.orderFront(nil) }
         }
