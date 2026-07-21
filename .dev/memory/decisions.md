@@ -238,3 +238,9 @@ phase<M1>/review-T15: PASS [auto]. Scripts/Info.plist (8 keys, LSUIElement real 
 - GUI shell (build+manual): `HotkeyRecorderField` (captures next keypress → HotkeyRecorder → prefs); `PreferencesWindow` polish (modify M1: replace plain hotkey text fields with recorder fields, surface all prefs incl the M5 OCR hotkey).
 - Deliverables (authored, not run headless): `Scripts/make_dmg.sh` (codesign Developer ID → create DMG → `notarytool submit --wait` → `stapler staple`; parameterized on env `DEVELOPER_ID_APP` + `AC_NOTARY_PROFILE`; `bash -n` syntax-checked); `Scripts/make_icon.sh` + placeholder `AppIcon` wired into `make_app.sh`/Info.plist; `.github/workflows/ci.yml` (macos-latest: `swift build` + `swift test`); `README.md`.
 - Open questions resolved: final app name = keep **MacShot** (rename is a later cosmetic); icon = generated placeholder (final art deferred to human); repo public/private = author decides at push time (no remote exists; CI workflow is visibility-agnostic). All reversible.
+
+### phase6/plan (M6) — all `[auto]`
+- 6 tasks, 4 waves, peak parallelism 3 (W1: HotkeyRecorder ‖ DMG scripts ‖ CI workflow — disjoint trees). Plan: docs/plans/2026-07-21-m6-ship.md.
+- Executor bases worktree on `exec/m5-ocr-20260721` (stacked; no-merge).
+- `make_dmg.sh` authored + `bash -n` checked, NOT executed (no Developer ID here); CI yaml-validated not run (no remote); both are human/CI-run artifacts. HotkeyRecorder tests pass raw Cocoa modifier bits as UInt literals to keep MacShotCore tests AppKit-free.
+- Notarization/DMG-install remains the human DoD — final report will flag the Developer ID prerequisite, NOT halt.

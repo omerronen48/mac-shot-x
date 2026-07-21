@@ -13,7 +13,7 @@ Mode: `--auto` (unattended). Source roadmap: `docs/roadmaps/2026-07-21-macshot.m
 | M3 | Annotation editor | done | branch `exec/m3-annotation-editor-20260721` @ 57adb15 (git-verified); 47/47 tests; stacked on M2; unmerged |
 | M4 | Beautify | done | branch `exec/m4-beautify-20260721` @ 8130bb0 (git-verified); 66/66 tests; stacked on M3; unmerged |
 | M5 | OCR | done | branch `exec/m5-ocr-20260721` @ 4fc1b78 (git-verified); 73/73 tests; stacked on M4; unmerged |
-| M6 | Ship | pending | depends M1–M5 |
+| M6 | Ship | planned | plan: docs/plans/2026-07-21-m6-ship.md (6 tasks); stacked on M5 branch |
 
 ## Log
 - 2026-07-21 — imported 6 milestones from roadmap, all pending. Loop starts at M1.
