@@ -17,6 +17,9 @@ public final class OverlayController {
     private let gap: CGFloat = 8
     private let edgeMargin: CGFloat = 16
 
+    /// Set by AppDelegate to open the annotation editor for a captured image.
+    public var onEdit: ((CGImage) -> Void)?
+
     public init(historyStore: HistoryStore) {
         self.historyStore = historyStore
     }
@@ -133,6 +136,8 @@ public final class OverlayController {
 
         case .dragStarted:
             break // handled inside QuickAccessPanel
+        case .edit:
+            onEdit?(result.image)
         }
     }
 }

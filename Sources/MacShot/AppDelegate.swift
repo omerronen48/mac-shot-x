@@ -1,4 +1,5 @@
 import AppKit
+import ImageIO
 import MacShotCore
 import ScreenCaptureKit
 
@@ -15,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let prefsWindowController = PreferencesWindowController()
     private var historyWindowController: HistoryWindowController?
     private var overlayController: OverlayController?
+    private var editorWindows: [EditorWindow] = [] // ponytail: retain open editors
 
     // ponytail: nonisolated(unsafe) lets us call the nonisolated async capture(_:at:) without
     // a Swift-6 "sending across isolation" error — CaptureEngine is not Sendable because
@@ -32,6 +34,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let historyStore = HistoryStore(directory: saveDir, pins: pinStore)
         overlayController = OverlayController(historyStore: historyStore)
         historyWindowController = HistoryWindowController(store: historyStore)
+
+        overlayController?.onEdit = { [weak self] image in self?.openEditor(for: image) }
+        historyWindowController?.onEdit = { [weak self] entry in
+            guard let self, let src = CGImageSourceCreateWithURL(entry.url as CFURL, nil),
+                  let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return }
+            self.openEditor(for: img)
+        }
 
         NSApp.setActivationPolicy(.accessory)
         buildStatusMenu()
@@ -128,5 +137,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 continuation.resume(returning: result)
             }
         }
+    }
+
+    private func openEditor(for image: CGImage) {
+        // ponytail: init shows the window; retain so it isn't released
+        editorWindows.append(EditorWindow(base: image, sink: sink, preferences: prefs))
     }
 }

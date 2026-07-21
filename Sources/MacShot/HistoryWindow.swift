@@ -54,6 +54,7 @@ private struct ThumbnailCell: View {
     let onDelete: () -> Void
     let onPin: () -> Void
     let onUnpin: () -> Void
+    let onEdit: () -> Void
 
     @State private var image: NSImage? = nil
 
@@ -80,6 +81,7 @@ private struct ThumbnailCell: View {
             }
         }
         .contextMenu {
+            Button("Edit") { onEdit() }
             Button("Copy") { copyToPasteboard(entry.url) }
             Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([entry.url]) }
             Divider()
@@ -113,6 +115,7 @@ private struct ThumbnailCell: View {
 struct HistoryGrid: View {
     @ObservedObject var model: HistoryModel
     var onChooseFolder: (() -> Void)?
+    var onEdit: ((HistoryEntry) -> Void)?
 
     private let columns = [GridItem(.adaptive(minimum: 160), spacing: 12)]
     private var pinned: [HistoryEntry] { model.entries.filter(\.isPinned) }
@@ -160,7 +163,8 @@ struct HistoryGrid: View {
             entry: entry,
             onDelete: { model.delete(entry) },
             onPin:    { model.pin(entry) },
-            onUnpin:  { model.unpin(entry) }
+            onUnpin:  { model.unpin(entry) },
+            onEdit:   { onEdit?(entry) }
         )
     }
 
@@ -184,6 +188,8 @@ public final class HistoryWindowController {
 
     /// Optional: called when user taps "Choose folder…" in empty state.
     public var onChooseFolder: (() -> Void)?
+    /// Optional: called when user taps "Edit" on a history entry.
+    public var onEdit: ((HistoryEntry) -> Void)?
 
     public init(store: HistoryStore) {
         model = HistoryModel(store: store)
@@ -195,7 +201,9 @@ public final class HistoryWindowController {
             NSApp.activate(ignoringOtherApps: true)
             return
         }
-        let view = HistoryGrid(model: model, onChooseFolder: { [weak self] in self?.onChooseFolder?() })
+        let view = HistoryGrid(model: model,
+                               onChooseFolder: { [weak self] in self?.onChooseFolder?() },
+                               onEdit: { [weak self] entry in self?.onEdit?(entry) })
         let host = NSHostingController(rootView: view)
         let win  = NSWindow(contentViewController: host)
         win.title = "Screenshot History"
