@@ -15,14 +15,38 @@ A free, native, on-device macOS screenshot tool. Runs in the menu bar — no doc
 - macOS 14 (Sonoma) or later
 - Apple Silicon or Intel (universal binary)
 
-## Download
+## Install
 
-A prebuilt **[`MacShot.dmg`](MacShot.dmg)** is in the repo — download it, open the DMG, and
-drag **MacShot** into **Applications**. It is signed but not notarized, so the first launch
-needs **right-click → Open** (Gatekeeper), then grant **Screen Recording** when prompted.
+**One-line install** (downloads + installs to /Applications, no clone needed):
 
-Rebuild the DMG yourself anytime with `bash Scripts/make_dmg.sh`. Tagging a release
-(`v*`) also publishes a fresh DMG via GitHub Actions (see `.github/workflows/release.yml`).
+```bash
+curl -fsSL https://raw.githubusercontent.com/omerronen48/mac-shot-x/main/Scripts/install.sh | bash
+```
+
+**Homebrew** (the repo doubles as a tap):
+
+```bash
+brew tap omerronen48/mac-shot-x https://github.com/omerronen48/mac-shot-x
+brew install --cask macshot
+```
+
+**Direct download** — grab **[`MacShot.dmg`](https://github.com/omerronen48/mac-shot-x/raw/main/MacShot.dmg)**,
+open it, and drag **MacShot** into **Applications**.
+
+It is signed but not notarized, so if macOS blocks the first launch, **right-click → Open**
+(the one-line installer clears the quarantine flag for you). Then grant **Screen Recording**
+when prompted.
+
+### Updating & startup
+
+- **Check for Updates** — Preferences → *Updates* → "Check for Updates…" compares your version
+  against the latest GitHub release and offers to download the new DMG (only on your click; no
+  background network).
+- **Launch at login** — Preferences → *Behaviour* → "Launch at login" registers MacShot as a
+  macOS login item so it starts with your session.
+
+Rebuild the DMG yourself with `bash Scripts/make_dmg.sh`. Tagging a release (`v*`) publishes a
+fresh DMG via GitHub Actions (`.github/workflows/release.yml`).
 
 ## Build from Source
 

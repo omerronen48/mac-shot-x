@@ -15,8 +15,8 @@ final class PreferencesModel: ObservableObject {
     @Published var areaHotkey: String
     @Published var windowHotkey: String
     @Published var fullscreenHotkey: String
-    // ponytail: no ocrHotkey in Preferences.swift (M5 skipped it); held in-memory only
-    @Published var ocrHotkey: String = "⌃⌘⇧O"
+    @Published var ocrHotkey: String
+    @Published var launchAtLogin: Bool
 
     init() {
         let p = Preferences(store: UserDefaults.standard)
@@ -28,6 +28,12 @@ final class PreferencesModel: ObservableObject {
         windowHotkey      = p.windowHotkey
         fullscreenHotkey  = p.fullscreenHotkey
         ocrHotkey         = p.ocrHotkey
+        launchAtLogin     = LoginItem.isEnabled   // system status is the source of truth
+    }
+
+    func setLaunchAtLogin(_ on: Bool) {
+        LoginItem.setEnabled(on)
+        launchAtLogin = LoginItem.isEnabled       // reflect real status (register can fail)
     }
 
     func commitDirectory(_ path: String) {
@@ -109,6 +115,17 @@ struct PreferencesView: View {
                     .onChange(of: model.copyToClipboard) { _, v in model.commitCopyToClipboard(v) }
                 Toggle("Save to file", isOn: $model.saveToFile)
                     .onChange(of: model.saveToFile) { _, v in model.commitSaveToFile(v) }
+                Toggle("Launch at login", isOn: $model.launchAtLogin)
+                    .onChange(of: model.launchAtLogin) { _, v in model.setLaunchAtLogin(v) }
+            }
+
+            Section("Updates") {
+                HStack {
+                    Text("MacShot \(UpdateService.currentVersion)")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Check for Updates…") { UpdateService.checkForUpdates() }
+                }
             }
 
             // Hotkey recorder fields — click to record, Esc to cancel
