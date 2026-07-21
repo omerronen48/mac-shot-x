@@ -271,9 +271,11 @@ private final class OverlayView: NSView {
 
         // 5. Crosshair at cursor
         drawCrosshair(at: cursorPoint, in: ctx, bounds: b)
-
-        // 6. Magnifier loupe near cursor
-        drawLoupe(at: cursorPoint, in: ctx)
+        // ponytail: no magnifier loupe. Sampling the view via cacheDisplay() from inside
+        // draw() re-enters draw() → infinite recursion → stack overflow (vImage crash), and
+        // it only captures the dim overlay anyway, not the screen. A real loupe needs a screen
+        // snapshot grabbed at present-time; add that later if pixel-precision is wanted.
+        // Crosshair + dimension readout give enough precision for area selection.
     }
 
     private func drawCrosshair(at pt: NSPoint, in ctx: CGContext, bounds: CGRect) {
@@ -312,45 +314,6 @@ private final class OverlayView: NSView {
 
         // Draw attributed string via NSGraphicsContext — we're inside draw(_:) so it's fine
         str.draw(at: NSPoint(x: ox + pad, y: oy + pad / 2))
-    }
-
-    // ponytail: loupe = simple NSImage snapshot of the area + draw scaled — no pixel-perfect requirement
-    private func drawLoupe(at pt: NSPoint, in ctx: CGContext) {
-        let loupeSize: CGFloat = 80
-        let zoom: CGFloat = 4
-        let sampleSize: CGFloat = loupeSize / zoom
-        let sampleRect = CGRect(
-            x: pt.x - sampleSize / 2,
-            y: pt.y - sampleSize / 2,
-            width: sampleSize,
-            height: sampleSize
-        ).intersection(bounds)
-        guard !sampleRect.isEmpty, sampleRect.width > 2, sampleRect.height > 2 else { return }
-
-        // Position loupe away from cursor
-        let lx = pt.x + 24
-        let ly = pt.y + 24
-        guard lx + loupeSize < bounds.maxX, ly + loupeSize < bounds.maxY else { return }
-        let loupeRect = CGRect(x: lx, y: ly, width: loupeSize, height: loupeSize)
-
-        // Capture the window's current backing image for the sample area
-        guard let bitmapRep = bitmapImageRepForCachingDisplay(in: sampleRect) else { return }
-        cacheDisplay(in: sampleRect, to: bitmapRep)
-        guard let cgImage = bitmapRep.cgImage else { return }
-
-        ctx.saveGState()
-        // Circular clip for the loupe
-        ctx.addEllipse(in: loupeRect)
-        ctx.clip()
-        // Draw zoomed image
-        ctx.draw(cgImage, in: loupeRect)
-        ctx.restoreGState()
-
-        // Loupe border
-        ctx.setStrokeColor(NSColor.white.cgColor)
-        ctx.setLineWidth(1.5)
-        ctx.addEllipse(in: loupeRect)
-        ctx.strokePath()
     }
 
     // MARK: Coordinate conversion
