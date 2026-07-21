@@ -13,6 +13,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let permissionFlow = PermissionFlow()
     private let overlay = SelectionOverlay()
     private let prefsWindowController = PreferencesWindowController()
+    private var historyWindowController: HistoryWindowController?
+    private var overlayController: OverlayController?
 
     // ponytail: nonisolated(unsafe) lets us call the nonisolated async capture(_:at:) without
     // a Swift-6 "sending across isolation" error — CaptureEngine is not Sendable because
@@ -24,6 +26,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         engine = CaptureEngine(capturer: capturer, sink: sink, preferences: prefs)
+
+        let saveDir = URL(fileURLWithPath: prefs.saveDirectoryPath, isDirectory: true)
+        let pinStore = PinStore(store: UserDefaults.standard)
+        let historyStore = HistoryStore(directory: saveDir, pins: pinStore)
+        overlayController = OverlayController(historyStore: historyStore)
+        historyWindowController = HistoryWindowController(store: historyStore)
 
         NSApp.setActivationPolicy(.accessory)
         buildStatusMenu()
@@ -53,6 +61,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(withTitle: "Capture Window",     action: #selector(captureWindow),     keyEquivalent: "")
         menu.addItem(withTitle: "Capture Fullscreen", action: #selector(captureFullscreen), keyEquivalent: "")
         menu.addItem(.separator())
+        menu.addItem(withTitle: "History…",     action: #selector(openHistory),     keyEquivalent: "")
         menu.addItem(withTitle: "Preferences…", action: #selector(openPreferences), keyEquivalent: "")
         menu.addItem(withTitle: "Quit",         action: #selector(quitApp),          keyEquivalent: "")
         item.menu = menu
@@ -62,6 +71,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func captureArea()       { runCapture(mode: .area(nil)) }
     @objc private func captureWindow()     { runCapture(mode: .window(nil)) }
     @objc private func captureFullscreen() { runCapture(mode: .fullscreen(nil)) }
+    @objc private func openHistory()        { historyWindowController?.refresh(); historyWindowController?.show() }
     @objc private func openPreferences()   { prefsWindowController.show() }
     @objc private func quitApp()           { NSApp.terminate(nil) }
 
@@ -96,7 +106,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             do {
                 let result = try await engine.capture(resolvedMode)
-                notifier.notifyCaptured(fileURL: result.fileURL, size: result.size)
+                overlayController?.present(result)
             } catch let err as CaptureError where err == .permissionDenied {
                 notifier.notifyError("Screen recording permission denied.")
                 permissionFlow.openScreenRecordingSettings()
