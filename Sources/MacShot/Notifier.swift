@@ -43,4 +43,11 @@ struct Notifier {
         content.body = message
         Notifier.post(content)
     }
+
+    func notify(title: String, body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        Notifier.post(content)
+    }
 }
