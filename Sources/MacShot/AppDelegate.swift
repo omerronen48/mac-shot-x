@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let prefsWindowController = PreferencesWindowController()
     private var historyWindowController: HistoryWindowController?
     private var overlayController: OverlayController?
+    private var ocrCoordinator: OCRCoordinator?
     private var editorWindows: [EditorWindow] = [] // ponytail: retain open editors
 
     // ponytail: nonisolated(unsafe) lets us call the nonisolated async capture(_:at:) without
@@ -34,6 +35,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let historyStore = HistoryStore(directory: saveDir, pins: pinStore)
         overlayController = OverlayController(historyStore: historyStore)
         historyWindowController = HistoryWindowController(store: historyStore)
+        ocrCoordinator = OCRCoordinator(
+            overlay: overlay,
+            capturer: capturer,
+            ocr: VisionOCRService(),
+            notifier: notifier,
+            permission: permissionFlow
+        )
 
         overlayController?.onEdit = { [weak self] image in self?.openEditor(for: image) }
         historyWindowController?.onEdit = { [weak self] entry in
@@ -69,6 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(withTitle: "Capture Area",       action: #selector(captureArea),       keyEquivalent: "")
         menu.addItem(withTitle: "Capture Window",     action: #selector(captureWindow),     keyEquivalent: "")
         menu.addItem(withTitle: "Capture Fullscreen", action: #selector(captureFullscreen), keyEquivalent: "")
+        menu.addItem(withTitle: "Capture Text (OCR)", action: #selector(captureText),       keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "History…",     action: #selector(openHistory),     keyEquivalent: "")
         menu.addItem(withTitle: "Preferences…", action: #selector(openPreferences), keyEquivalent: "")
@@ -80,6 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func captureArea()       { runCapture(mode: .area(nil)) }
     @objc private func captureWindow()     { runCapture(mode: .window(nil)) }
     @objc private func captureFullscreen() { runCapture(mode: .fullscreen(nil)) }
+    @objc private func captureText()       { Task { await ocrCoordinator?.run() } }
     @objc private func openHistory()        { historyWindowController?.refresh(); historyWindowController?.show() }
     @objc private func openPreferences()   { prefsWindowController.show() }
     @objc private func quitApp()           { NSApp.terminate(nil) }
@@ -96,6 +106,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let spec = try? HotkeySpec(string: str) else { continue }
             hotkeyManager.register(spec, id: id) { [weak self] in
                 self?.runCapture(mode: mode)
+            }
+        }
+        if let ocrSpec = try? HotkeySpec(string: "⌃⌘⇧O") {
+            hotkeyManager.register(ocrSpec, id: 4) { [weak self] in
+                Task { await self?.ocrCoordinator?.run() }
             }
         }
     }
