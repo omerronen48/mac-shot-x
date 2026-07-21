@@ -13,7 +13,7 @@ Mode: `--auto` (unattended). Source roadmap: `docs/roadmaps/2026-07-21-macshot.m
 | M3 | Annotation editor | done | branch `exec/m3-annotation-editor-20260721` @ 57adb15 (git-verified); 47/47 tests; stacked on M2; unmerged |
 | M4 | Beautify | done | branch `exec/m4-beautify-20260721` @ 8130bb0 (git-verified); 66/66 tests; stacked on M3; unmerged |
 | M5 | OCR | done | branch `exec/m5-ocr-20260721` @ 4fc1b78 (git-verified); 73/73 tests; stacked on M4; unmerged |
-| M6 | Ship | planned | plan: docs/plans/2026-07-21-m6-ship.md (6 tasks); stacked on M5 branch |
+| M6 | Ship | done | branch `exec/m6-ship-20260721` @ a7b4f88 (git-verified); 77/77 tests; stacked on M5; unmerged |
 
 ## Log
 - 2026-07-21 — imported 6 milestones from roadmap, all pending. Loop starts at M1.
@@ -42,3 +42,9 @@ Phases don't merge to master (no-merge rule). Dependent phases stack: M2 branche
 - Next: M5 (OCR; depends M1, parallel-safe — stacks on M1 or M4 per orchestrator) then M6 (Ship).
 - 2026-07-21 — **M4 done.** 6/6 tasks (+1 review-fix), all reviews PASS. `swift test` 66/66. `swift build` clean. Branch `exec/m4-beautify-20260721` @ 8130bb0, stacked on M3 — independently git-verified. 18 `[auto]` decision/review entries, 8 CGGradient/shadow/orchestration lessons. Unmerged (--auto no-merge; human integrates the M1→M2→M3→M4 stack).
 - 2026-07-21 — **M5 done.** 5 tasks + T5-fix, all reviews PASS. `swift test` 73/73 (M1 18 + M2 11 + M3 18 + M4 19 + M5 7). Branch `exec/m5-ocr-20260721` @ 4fc1b78, stacked on M4 — git-verified (6 commits, chains to 8130bb0, master untouched @ 1f8ac25). Review caught a real digit-only-HotkeySpec bug (⌃⌘⇧O was a silent no-op) → fixed with A–Z keycodes. 8 `[auto]` decisions, 1 lessons block. Unmerged.
+- 2026-07-21 — **M6 done (FINAL milestone).** 6 tasks, 4 waves (W1 parallel×3: HotkeyRecorder ‖ Scripts ‖ CI), all reviews PASS, zero iterations. `swift test` 77/77 (M1 18 + M2 11 + M3 18 + M4 19 + M5 7 + M6 4). `swift build` clean. Deliverables: HotkeyRecorder core (TDD), notarized-DMG + placeholder-icon scripts (bash -n OK; make_dmg.sh exits 1 w/o Developer ID by design — NOT executed here), GitHub Actions CI (valid YAML), HotkeyRecorderField + PreferencesWindow polish (build+manual-smoke), README (prominent $99/yr Developer ID prerequisite). Branch `exec/m6-ship-20260721` @ a7b4f88 stacked on M5 (base 4fc1b78) — git-verified: HEAD==ref, 6 commits chain to base, diffstat==manifest (11 files), 0 .dev/memory committed. Unmerged (--auto no-merge; human integrates the full M1→M6 stack). HUMAN DoD remaining: notarize with real Developer ID creds + friend installs the DMG. **All 6 roadmap milestones now built.**
+- 2026-07-21 — **M6 done. ROADMAP COMPLETE.** 6 tasks, all reviews PASS. `swift test` 77/77 (M1 18 + M2 11 + M3 18 + M4 19 + M5 7 + M6 4). Branch `exec/m6-ship-20260721` @ a7b4f88, stacked on M5 — git-verified (6 commits, chains to 4fc1b78, master untouched, 0 .dev/memory committed). Ship artifacts: make_dmg.sh (notarize, bash -n clean, exits 1 w/o creds), make_icon.sh, ci.yml (valid YAML), README, HotkeyRecorder + recorder field + prefs polish. 9 `[auto]` decisions. No escalation.
+
+## ROADMAP COMPLETE — all 6 milestones built (2026-07-21)
+Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human integrates the stack + runs manual DoDs.
+**Human prerequisite for M6 DoD:** Apple Developer ID ($99/yr) to run `Scripts/make_dmg.sh` (notarize) → distributable DMG. All code/scripts/CI/README ship regardless.
