@@ -111,3 +111,8 @@ phase<M1>/review-T15: PASS [auto]. Scripts/Info.plist (8 keys, LSUIElement real 
 - Post-capture flow: `OverlayController.present(result)` replaces the success notification; `Notifier` retained for errors only. Reversible.
 - Drag-out: use `fileURL` when present; if nil (saveToFile off), write a temp PNG on demand for the drag. 
 - Orphan cleanup: delete `Sources/MacShotCore/Placeholder.swift` (M1 T1 scaffold, now superseded by real sources).
+
+### phase2/plan (M2) — all `[auto]`
+- 8 tasks, 5 waves, peak parallelism 3 (W1 core models). Plan: docs/plans/2026-07-21-m2-overlay-history.md.
+- Executor MUST base its worktree on `exec/m1-capture-core-20260721`, not master (stacked branch; no-merge rule keeps M1 unmerged on master).
+- `CaptureResult` marked `@unchecked Sendable` (CGImage immutable/thread-safe) rather than dropping Sendable — keeps M1 concurrency contract intact.

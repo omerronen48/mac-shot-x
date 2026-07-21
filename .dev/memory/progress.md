@@ -9,7 +9,7 @@ Mode: `--auto` (unattended). Source roadmap: `docs/roadmaps/2026-07-21-macshot.m
 | # | Phase | Status | Notes |
 |---|-------|--------|-------|
 | M1 | Capture core | done | branch `exec/m1-capture-core-20260721` @ 67197ac; 18/18 tests, .app built; unmerged (human) |
-| M2 | Quick-access overlay & history | pending | depends M1 |
+| M2 | Quick-access overlay & history | planned | plan: docs/plans/2026-07-21-m2-overlay-history.md (8 tasks); stacks on M1 branch |
 | M3 | Annotation editor | pending | depends M2 |
 | M4 | Beautify | pending | depends M3 |
 | M5 | OCR | pending | depends M1 (parallel-safe with M3/M4) |
