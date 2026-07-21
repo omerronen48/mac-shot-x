@@ -44,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         overlayController?.onEdit = { [weak self] image in self?.openEditor(for: image) }
+        overlayController?.onHistory = { [weak self] in self?.openHistory() }
         historyWindowController?.onEdit = { [weak self] entry in
             guard let self, let src = CGImageSourceCreateWithURL(entry.url as CFURL, nil),
                   let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return }

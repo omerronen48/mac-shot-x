@@ -19,6 +19,7 @@ public final class OverlayController {
 
     /// Set by AppDelegate to open the annotation editor for a captured image.
     public var onEdit: ((CGImage) -> Void)?
+    public var onHistory: (() -> Void)?
 
     public init(historyStore: HistoryStore) {
         self.historyStore = historyStore
@@ -69,14 +70,16 @@ public final class OverlayController {
             ?? NSScreen.main ?? NSScreen.screens.first
         let frame = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
 
+        // Force a CONSTANT panel size every tick so nothing (image intrinsic size, layout) can
+        // grow it — this snaps back any drift that caused the "resize/jump" on large captures.
+        let size = NSSize(width: 224, height: panelHeight)
         for slot in visible {
             guard let panel = panels[slot.id] else { continue }
-            let size = panel.frame.size
             var x = frame.maxX - size.width - edgeMargin
             var y = frame.minY + edgeMargin + CGFloat(slot.index) * (panelHeight + gap)
             x = max(frame.minX + edgeMargin, min(x, frame.maxX - size.width - edgeMargin))
             y = max(frame.minY + edgeMargin, min(y, frame.maxY - size.height - edgeMargin))
-            panel.setFrameOrigin(NSPoint(x: x, y: y))
+            panel.setFrame(NSRect(origin: NSPoint(x: x, y: y), size: size), display: true)
             if !panel.isVisible { panel.orderFront(nil) }
         }
 
@@ -146,6 +149,8 @@ public final class OverlayController {
             break // handled inside QuickAccessPanel
         case .edit:
             onEdit?(result.image)
+        case .history:
+            onHistory?()
         }
     }
 }
