@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import MacShotCore
 
 // MARK: - Tool
@@ -17,13 +18,17 @@ final class EditorViewModel {
     var activeTool: Tool = .select
     var style: AnnotationStyle = .default
     var selection: UUID?
+    var beautifyStyle: BeautifyStyle = .none
+    let presetStore: PresetStore
 
     private var inProgressID: UUID?
     private var dragStart: CGPoint?
 
-    init(document: AnnotationDocument) {
+    init(document: AnnotationDocument,
+         presetStore: PresetStore = PresetStore(store: UserDefaults.standard)) {
         self.document = document
         self.undo = UndoStack(initial: document.annotations)
+        self.presetStore = presetStore
     }
 
     func beginStroke(at point: CGPoint) {
@@ -139,6 +144,15 @@ struct EditorCanvas: View {
             let offset = fitOffset(geo.size, scale: scale)
 
             ZStack(alignment: .topLeading) {
+                // Live beautify frame: background + shadow behind the canvas.
+                // ponytail: corner-clip of the image is NOT applied live (clipping the Canvas
+                // would also clip annotations); exact clip is applied at export by BeautifyRenderer.
+                BeautifyFrameView(style: vm.beautifyStyle, imgRect: CGRect(
+                    x: offset.x, y: offset.y,
+                    width: CGFloat(base.width) * scale,
+                    height: CGFloat(base.height) * scale
+                ))
+
                 Canvas { ctx, size in
                     // Draw base image
                     let imgRect = CGRect(
@@ -306,6 +320,66 @@ struct EditorCanvas: View {
                 bb = vr(ann.boundingBox).insetBy(dx: -4, dy: -4)
             }
             ctx.stroke(Path(bb), with: .color(.accentColor.opacity(0.8)), style: StrokeStyle(lineWidth: 2, dash: [6, 3]))
+        }
+    }
+}
+
+// MARK: - BeautifyFrameView
+
+/// Renders the beautify background + shadow behind the canvas image.
+/// Positioned and sized to the padded rect around `imgRect`.
+/// ponytail: corner-clip on the image is skipped live (export-only via BeautifyRenderer).
+private struct BeautifyFrameView: View {
+    let style: BeautifyStyle
+    let imgRect: CGRect
+
+    var body: some View {
+        let pad = style.padding
+        // .none: zero padding + no shadow → nothing to show.
+        if pad == 0 && style.shadow == nil { return AnyView(EmptyView()) }
+
+        let frameRect = imgRect.insetBy(dx: -pad, dy: -pad)
+        let bg = resolvedBackground(style.background)
+
+        let base = Rectangle()
+            .fill(AnyShapeStyle(bg))
+            .frame(width: frameRect.width, height: frameRect.height)
+            .offset(x: frameRect.minX, y: frameRect.minY)
+
+        if let sh = style.shadow {
+            return AnyView(
+                base.shadow(
+                    color: Color(cgColor: sh.color.cgColor).opacity(sh.opacity),
+                    radius: sh.radius,
+                    x: sh.offset.width,
+                    y: sh.offset.height
+                )
+            )
+        }
+        return AnyView(base)
+    }
+
+    /// Maps BeautifyBackground to an AnyShapeStyle for use in .fill().
+    /// ponytail: gradient angle uses CSS convention (0° = top→bottom, CW);
+    /// mapped via sin/cos — angle 135° → topLeading→bottomTrailing (matches builtins).
+    private func resolvedBackground(_ bg: BeautifyBackground) -> AnyShapeStyle {
+        switch bg {
+        case let .solid(c):
+            return AnyShapeStyle(Color(cgColor: c.cgColor))
+        case let .linearGradient(colors, angle):
+            let a = angle * .pi / 180
+            let start = UnitPoint(x: 0.5 - 0.5 * sin(a), y: 0.5 - 0.5 * cos(a))
+            let end   = UnitPoint(x: 0.5 + 0.5 * sin(a), y: 0.5 + 0.5 * cos(a))
+            return AnyShapeStyle(LinearGradient(
+                colors: colors.map { Color(cgColor: $0.cgColor) },
+                startPoint: start, endPoint: end
+            ))
+        case let .image(path):
+            // ponytail: fallback to gray if image file is missing
+            if let img = NSImage(contentsOfFile: path) {
+                return AnyShapeStyle(ImagePaint(image: Image(nsImage: img)))
+            }
+            return AnyShapeStyle(Color(white: 0.5))
         }
     }
 }
