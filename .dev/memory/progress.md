@@ -12,7 +12,7 @@ Mode: `--auto` (unattended). Source roadmap: `docs/roadmaps/2026-07-21-macshot.m
 | M2 | Quick-access overlay & history | done | branch `exec/m2-overlay-history-20260721` @ e1c1dc2; 29/29 tests; stacked on M1; unmerged |
 | M3 | Annotation editor | done | branch `exec/m3-annotation-editor-20260721` @ 57adb15 (git-verified); 47/47 tests; stacked on M2; unmerged |
 | M4 | Beautify | done | branch `exec/m4-beautify-20260721` @ 8130bb0 (git-verified); 66/66 tests; stacked on M3; unmerged |
-| M5 | OCR | planned | plan: docs/plans/2026-07-21-m5-ocr.md (5 tasks); stacked on M4 branch |
+| M5 | OCR | done | branch `exec/m5-ocr-20260721` @ 4fc1b78 (git-verified); 73/73 tests; stacked on M4; unmerged |
 | M6 | Ship | pending | depends M1–M5 |
 
 ## Log
@@ -41,3 +41,4 @@ Phases don't merge to master (no-merge rule). Dependent phases stack: M2 branche
 - Notable: T2 review caught a real critical bug (8192 clamp reduced scale but not bitmap size → oversized allocation) — fixed in follow-up 7f139b9 with a clamp regression test. One reviewer hit a transient API rate-limit (no verdict) and was cleanly re-dispatched. Agent SHAs cross-checked via git at every commit (accurate this run).
 - Next: M5 (OCR; depends M1, parallel-safe — stacks on M1 or M4 per orchestrator) then M6 (Ship).
 - 2026-07-21 — **M4 done.** 6/6 tasks (+1 review-fix), all reviews PASS. `swift test` 66/66. `swift build` clean. Branch `exec/m4-beautify-20260721` @ 8130bb0, stacked on M3 — independently git-verified. 18 `[auto]` decision/review entries, 8 CGGradient/shadow/orchestration lessons. Unmerged (--auto no-merge; human integrates the M1→M2→M3→M4 stack).
+- 2026-07-21 — **M5 done.** 5 tasks + T5-fix, all reviews PASS. `swift test` 73/73 (M1 18 + M2 11 + M3 18 + M4 19 + M5 7). Branch `exec/m5-ocr-20260721` @ 4fc1b78, stacked on M4 — git-verified (6 commits, chains to 8130bb0, master untouched @ 1f8ac25). Review caught a real digit-only-HotkeySpec bug (⌃⌘⇧O was a silent no-op) → fixed with A–Z keycodes. 8 `[auto]` decisions, 1 lessons block. Unmerged.
