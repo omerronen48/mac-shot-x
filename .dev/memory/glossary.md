@@ -18,3 +18,6 @@
 - **AnnotationRenderer** — flattens base image + AnnotationDocument into a composited CGImage (CoreGraphics + CoreImage); headless-testable.
 - **RGBAColor** — AppKit-free color value (r,g,b,a) in MacShotCore, converted to CGColor at render time.
 - **UndoStack** — snapshot-based undo/redo over the annotation array.
+- **BeautifyStyle** — share-ready export styling (background, padding, corner radius, shadow, export scale), applied at export only; a Capture has 0..1. Codable.
+- **BeautifyRenderer** — composites a source image onto a padded/styled background (CGContext + CGGradient); headless-testable.
+- **BeautifyPreset / PresetStore** — named saved BeautifyStyles persisted in UserDefaults (over KeyValueStore); ships with built-in backgrounds.
