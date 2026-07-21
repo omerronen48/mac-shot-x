@@ -10,7 +10,7 @@ Mode: `--auto` (unattended). Source roadmap: `docs/roadmaps/2026-07-21-macshot.m
 |---|-------|--------|-------|
 | M1 | Capture core | done | branch `exec/m1-capture-core-20260721` @ 67197ac; 18/18 tests, .app built; unmerged (human) |
 | M2 | Quick-access overlay & history | done | branch `exec/m2-overlay-history-20260721` @ e1c1dc2; 29/29 tests; stacked on M1; unmerged |
-| M3 | Annotation editor | planned | plan: docs/plans/2026-07-21-m3-annotation-editor.md (9 tasks); stacks on M2 branch |
+| M3 | Annotation editor | done | branch `exec/m3-annotation-editor-20260721` @ 57adb15 (git-verified); 47/47 tests; stacked on M2; unmerged |
 | M4 | Beautify | pending | depends M3 |
 | M5 | OCR | pending | depends M1 (parallel-safe with M3/M4) |
 | M6 | Ship | pending | depends M1–M5 |
@@ -29,3 +29,5 @@ Phases don't merge to master (no-merge rule). Dependent phases stack: M2 branche
 - Deferred to human DoD: manual acceptance (real capture→panel, drag-out to Slack/mail, History grid pin/delete, rapid-capture stacking + ~8s auto-dismiss). GUI tasks had no automated tests by design.
 - Next: M3 (editor/annotations) per roadmap; stacks on M2.
 - 2026-07-21 — **M2 done.** 8/8 tasks, all reviews PASS. `swift test` 29/29 (M1 18 + M2 11). `swift build` clean. Branch `exec/m2-overlay-history-20260721` @ e1c1dc2, stacked on M1 (base verified). 11 `[auto]` decisions, 3 lessons. Notable: T4 added `resolvingSymlinksInPath()` for pin-path comparison (macOS temp symlink). Unmerged (human integrates M1→M2 stack).
+- 2026-07-21 — **M3 execution done (exec).** 9/9 tasks, all task-reviews PASS. Branch `exec/m3-annotation-editor-20260721` @ 57adb15, stacked on M2 (`exec/m2-overlay-history-20260721` @ e1c1dc2). `swift build` clean; `swift test` **47/47** (M1 18 + M2 11 + M3 18). Core (T1-T5) strict TDD incl. real CoreImage/CoreGraphics pixel+blur assertions; GUI shell (T6-T9) build-gated. MacShotCore stays AppKit-free (CoreText CFString keys, RGBAColor→CGColor). T9 expanded manifest by 1 file (OverlayController — panel-action router needs the .edit case); non-destructive editor export writes a NEW annotated PNG + clipboard via M1 SystemSink. Unmerged (--auto no-merge; human integrates M1→M2→M3 stack). Notable execution hazard: agent-reported commit SHAs were unreliable (mis-transcribed for T5-T8; T9 write-then-commit timing races) — orchestrator verified every commit via git cat-file/reflog; a stray memory commit was soft-reset off the code branch. See lessons.md "Agent report trust".
+- 2026-07-21 — **M3 done.** 9/9 tasks, all reviews PASS. `swift test` 47/47 (M1 18 + M2 11 + M3 18). `swift build` clean. Branch `exec/m3-annotation-editor-20260721` @ 57adb15, stacked on M2 — **independently git-verified** (9 commits, chains to e1c1dc2, master untouched). 13 `[auto]` decisions. T9 expanded manifest by 1 (OverlayController.swift = panel-action router for `.edit`). Unmerged.
