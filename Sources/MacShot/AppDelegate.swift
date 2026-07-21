@@ -1,0 +1,122 @@
+import AppKit
+import MacShotCore
+import ScreenCaptureKit
+
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+
+    private let prefs = Preferences(store: UserDefaults.standard)
+    private let sink = SystemSink()
+    private let capturer = SCKScreenCapturer()
+    private let notifier = Notifier()
+    private let hotkeyManager = HotkeyManager()
+    private let permissionFlow = PermissionFlow()
+    private let overlay = SelectionOverlay()
+    private let prefsWindowController = PreferencesWindowController()
+
+    // ponytail: nonisolated(unsafe) lets us call the nonisolated async capture(_:at:) without
+    // a Swift-6 "sending across isolation" error — CaptureEngine is not Sendable because
+    // Preferences.store is AnyObject (KeyValueStore). AppDelegate owns this exclusively
+    // on the main actor, so the unsafety is bounded.
+    nonisolated(unsafe) private var engine: CaptureEngine!
+
+    private var statusItem: NSStatusItem?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        engine = CaptureEngine(capturer: capturer, sink: sink, preferences: prefs)
+
+        NSApp.setActivationPolicy(.accessory)
+        buildStatusMenu()
+
+        if !permissionFlow.hasScreenAccess() {
+            permissionFlow.requestScreenAccess()
+            permissionFlow.openScreenRecordingSettings()
+        }
+
+        registerHotkeys()
+
+        prefsWindowController.onHotkeysChanged = { [weak self] in
+            self?.hotkeyManager.unregisterAll()
+            self?.registerHotkeys()
+        }
+    }
+
+    // MARK: - Status menu
+
+    private func buildStatusMenu() {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        item.button?.image = NSImage(systemSymbolName: "camera.on.rectangle", accessibilityDescription: "MacShot")
+        if item.button?.image == nil { item.button?.title = "M" }
+
+        let menu = NSMenu()
+        menu.addItem(withTitle: "Capture Area",       action: #selector(captureArea),       keyEquivalent: "")
+        menu.addItem(withTitle: "Capture Window",     action: #selector(captureWindow),     keyEquivalent: "")
+        menu.addItem(withTitle: "Capture Fullscreen", action: #selector(captureFullscreen), keyEquivalent: "")
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "Preferences…", action: #selector(openPreferences), keyEquivalent: "")
+        menu.addItem(withTitle: "Quit",         action: #selector(quitApp),          keyEquivalent: "")
+        item.menu = menu
+        statusItem = item
+    }
+
+    @objc private func captureArea()       { runCapture(mode: .area(nil)) }
+    @objc private func captureWindow()     { runCapture(mode: .window(nil)) }
+    @objc private func captureFullscreen() { runCapture(mode: .fullscreen(nil)) }
+    @objc private func openPreferences()   { prefsWindowController.show() }
+    @objc private func quitApp()           { NSApp.terminate(nil) }
+
+    // MARK: - Hotkey registration
+
+    private func registerHotkeys() {
+        let specs: [(String, UInt32, CaptureMode)] = [
+            (prefs.areaHotkey,       1, .area(nil)),
+            (prefs.windowHotkey,     2, .window(nil)),
+            (prefs.fullscreenHotkey, 3, .fullscreen(nil)),
+        ]
+        for (str, id, mode) in specs {
+            guard let spec = try? HotkeySpec(string: str) else { continue }
+            hotkeyManager.register(spec, id: id) { [weak self] in
+                self?.runCapture(mode: mode)
+            }
+        }
+    }
+
+    // MARK: - Capture flow
+
+    private func runCapture(mode: CaptureMode) {
+        Task { @MainActor in
+            let resolvedMode: CaptureMode
+            if mode.needsSelectionUI {
+                let windowList = (try? await fetchWindowList()) ?? []
+                guard let m = await presentOverlay(mode: mode, windows: windowList) else { return }
+                resolvedMode = m
+            } else {
+                resolvedMode = mode
+            }
+
+            do {
+                let result = try await engine.capture(resolvedMode)
+                notifier.notifyCaptured(fileURL: result.fileURL, size: result.size)
+            } catch let err as CaptureError where err == .permissionDenied {
+                notifier.notifyError("Screen recording permission denied.")
+                permissionFlow.openScreenRecordingSettings()
+            } catch {
+                notifier.notifyError(error.localizedDescription)
+            }
+        }
+    }
+
+    private func fetchWindowList() async throws -> [(CGWindowID, CGRect)] {
+        let content = try await SCShareableContent.current
+        return content.windows.map { ($0.windowID, $0.frame) }
+    }
+
+    // ponytail: bridge completion-handler API to async via continuation
+    private func presentOverlay(mode: CaptureMode, windows: [(CGWindowID, CGRect)]) async -> CaptureMode? {
+        await withCheckedContinuation { continuation in
+            overlay.present(mode: mode, windows: windows) { result in
+                continuation.resume(returning: result)
+            }
+        }
+    }
+}
