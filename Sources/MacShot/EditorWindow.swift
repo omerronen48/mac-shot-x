@@ -21,14 +21,15 @@ final class EditorWindow: NSObject {
         let onExport: () -> Void = { [weak self] in
             guard let self else { return }
             let flat = AnnotationRenderer.flatten(base: base, document: vm.document)
-            sink.copyToClipboard(flat)
+            let out  = BeautifyRenderer.render(image: flat, style: vm.beautifyStyle)
+            sink.copyToClipboard(out)
             let dir = URL(fileURLWithPath: preferences.saveDirectoryPath, isDirectory: true)
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             let formatter = FilenameFormatter(format: preferences.filenameFormat)
-            let name = formatter.uniqueFilename(for: Date(), mode: "annotated") {
+            let name = formatter.uniqueFilename(for: Date(), mode: "beautified") {
                 FileManager.default.fileExists(atPath: dir.appendingPathComponent($0).path)
             }
-            _ = try? sink.writePNG(flat, suggestedName: name, inDirectory: dir)
+            _ = try? sink.writePNG(out, suggestedName: name, inDirectory: dir)
             self.window?.close()
             self.window = nil
         }
@@ -36,13 +37,14 @@ final class EditorWindow: NSObject {
         let root = VStack(spacing: 0) {
             ToolPalette(vm: vm, onExport: onExport)
             EditorCanvas(vm: vm, base: base)
+            BeautifyPanel(vm: vm)
         }
 
         let controller = NSHostingController(rootView: root)
         let win = NSWindow(contentViewController: controller)
         win.title = "Annotate"
         win.styleMask = [.titled, .closable, .resizable, .miniaturizable]
-        win.setContentSize(CGSize(width: CGFloat(base.width), height: CGFloat(base.height) + 48))
+        win.setContentSize(CGSize(width: max(CGFloat(base.width), 400), height: CGFloat(base.height) + 48 + 200))
         win.center()
         win.makeKeyAndOrderFront(nil)
         self.window = win
