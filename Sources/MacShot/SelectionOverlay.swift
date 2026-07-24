@@ -15,13 +15,21 @@ public final class SelectionOverlay {
     public func present(
         mode: CaptureMode,
         windows windowList: [(CGWindowID, CGRect)],
+        screenshot: CGImage? = nil,
+        preferences: Preferences? = nil,
         completion: @escaping (CaptureMode?) -> Void
     ) {
         self.windows = windowList
         self.completion = completion
 
         for screen in NSScreen.screens {
-            let ow = OverlayWindow(screen: screen, mode: mode, windowList: windowList) { [weak self] result in
+            let ow = OverlayWindow(
+                screen: screen,
+                mode: mode,
+                windowList: windowList,
+                screenshot: screenshot,
+                preferences: preferences
+            ) { [weak self] result in
                 self?.finish(result)
             }
             overlayWindows.append(ow)
@@ -47,6 +55,8 @@ private final class OverlayWindow: NSWindow {
         screen: NSScreen,
         mode: CaptureMode,
         windowList: [(CGWindowID, CGRect)],
+        screenshot: CGImage?,
+        preferences: Preferences?,
         completion: @escaping (CaptureMode?) -> Void
     ) {
         super.init(
@@ -65,6 +75,8 @@ private final class OverlayWindow: NSWindow {
             screen: screen,
             mode: mode,
             windowList: windowList,
+            screenshot: screenshot,
+            preferences: preferences,
             completion: completion
         )
         contentView = view
@@ -80,6 +92,8 @@ private final class OverlayView: NSView {
     private let screen: NSScreen
     private let mode: CaptureMode
     private let windowList: [(CGWindowID, CGRect)]
+    private let screenshot: CGImage?
+    private let preferences: Preferences?
     private let completion: (CaptureMode?) -> Void
 
     // drag state
@@ -103,11 +117,15 @@ private final class OverlayView: NSView {
         screen: NSScreen,
         mode: CaptureMode,
         windowList: [(CGWindowID, CGRect)],
+        screenshot: CGImage?,
+        preferences: Preferences?,
         completion: @escaping (CaptureMode?) -> Void
     ) {
         self.screen = screen
         self.mode = mode
         self.windowList = windowList
+        self.screenshot = screenshot
+        self.preferences = preferences
         self.completion = completion
         super.init(frame: .zero)
         // Track mouse moves for crosshair + window highlight
@@ -271,11 +289,53 @@ private final class OverlayView: NSView {
 
         // 5. Crosshair at cursor
         drawCrosshair(at: cursorPoint, in: ctx, bounds: b)
-        // ponytail: no magnifier loupe. Sampling the view via cacheDisplay() from inside
-        // draw() re-enters draw() → infinite recursion → stack overflow (vImage crash), and
-        // it only captures the dim overlay anyway, not the screen. A real loupe needs a screen
-        // snapshot grabbed at present-time; add that later if pixel-precision is wanted.
-        // Crosshair + dimension readout give enough precision for area selection.
+
+        // 6. Magnifier loupe — only when a snapshot was provided and mode needs selection
+        if let snap = screenshot, let prefs = preferences {
+            switch mode {
+            case .area, .window:
+                drawLoupe(snap: snap, prefs: prefs, cursor: cursorPoint, in: ctx, bounds: b)
+            case .fullscreen:
+                break
+            }
+        }
+    }
+
+    // ponytail: samples ONLY the passed-in CGImage — never calls cacheDisplay/bitmapImageRepForCachingDisplay
+    private func drawLoupe(snap: CGImage, prefs: Preferences, cursor: NSPoint, in ctx: CGContext, bounds: CGRect) {
+        let scale = screen.backingScaleFactor
+        let imgH = CGFloat(snap.height)
+
+        // Cursor in snapshot pixel space: scale × Y-flip (view bottom-left → CGImage top-left)
+        let pixelCursor = CGPoint(
+            x: cursor.x * scale,
+            y: imgH - cursor.y * scale   // flip Y
+        )
+
+        let loupeRect = LoupeGeometry.loupeRect(cursor: cursor, loupeSize: prefs.loupeSize, in: bounds)
+        let sampleRect = LoupeGeometry.sampleRect(cursor: pixelCursor, magnification: prefs.loupeMagnification, loupeSize: prefs.loupeSize)
+
+        guard let crop = snap.cropping(to: sampleRect) else { return }
+
+        ctx.saveGState()
+        // Clip to rounded rect
+        let clipPath = NSBezierPath(roundedRect: loupeRect, xRadius: 8, yRadius: 8)
+        ctx.addPath(clipPath.cgPath)
+        ctx.clip()
+        // Draw magnified crop — safe: no view-snapshot API involved
+        ctx.draw(crop, in: loupeRect)
+        ctx.restoreGState()
+
+        // Outline
+        if prefs.loupeOutlineEnabled {
+            ctx.saveGState()
+            let outlinePath = NSBezierPath(roundedRect: loupeRect, xRadius: 8, yRadius: 8)
+            ctx.addPath(outlinePath.cgPath)
+            ctx.setStrokeColor(prefs.loupeOutlineColor.cgColor)
+            ctx.setLineWidth(1.5)
+            ctx.strokePath()
+            ctx.restoreGState()
+        }
     }
 
     private func drawCrosshair(at pt: NSPoint, in ctx: CGContext, bounds: CGRect) {
