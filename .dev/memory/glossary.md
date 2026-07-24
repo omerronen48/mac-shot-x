@@ -25,3 +25,9 @@
 - **OCRTextAssembler** — pure logic ordering observations into final text (reading order, multi-column aware); headless-tested.
 - **OCRService / VisionOCRService** — protocol + Vision-framework impl (on-device VNRecognizeTextRequest, language auto-detect).
 - **OCRCoordinator** — sibling capture flow: area-select → capture region → recognize → assemble → clipboard + notification. Bypasses CaptureEngine.
+
+## v2
+- **Capture Last Area** — re-capture the previous area selection without re-dragging; last rect persisted in Preferences.
+- **CountdownView** — borderless window shown during a self-timer delay before capture.
+- **DownscaleTransform** — pure MacShotCore logic: halve retina dimensions for ~4× smaller files (opt-in).
+- **LoupeGeometry** — pure MacShotCore logic for the magnifier: sample-region rect in a cached screen image + clamped on-screen loupe rect. The overlay samples a screen snapshot taken at present-time (never cacheDisplay-in-draw).
