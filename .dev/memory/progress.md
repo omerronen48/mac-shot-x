@@ -62,7 +62,7 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 | M13 | Recording overlays & editor | skipped | dropped by user 2026-07-24 (depends on M12) |
 | M14 | Cloud upload & sharing | skipped | dropped by user 2026-07-24 |
 | M15 | Live translation overlay | skipped | dropped by user 2026-07-24 (macOS 15+ dependency) |
-| M16 | AI auto-redact | planned | plan: docs/plans/2026-07-23-m16-auto-redact.md (2 tasks); stacks on M11 |
+| M16 | AI auto-redact | done | branch `exec/m16-auto-redact-20260723` @ 7e6c117 (git-verified); 134/134; stacks on M11; unmerged |
 | M17 | Scrolling capture | pending | synthetic scroll + stitch |
 | M18 | Localization (i18n) | pending | String Catalog + starter languages; LAST, depends M7–M17 |
 
@@ -82,3 +82,4 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 - 2026-07-24 — **M10 done.** 6 tasks (incl. T6 comma-keycode fix so the ⌃⌘⇧, lockout-guard hotkey registers). `swift test` 120/120 (110 + 10 M10). Branch `exec/m10-settings-menubar-20260723` @ 694746d, stacked on M9 — git-verified. Sparkle declined; hand-rolled updater kept. 8 `[auto]` decisions. Unmerged.
 - 2026-07-24 — **M11 done.** 7/7 tasks, reviews PASS. `swift test` 123/123 (120 + 3 M11). Branch `exec/m11-pin-to-screen-20260723` @ f69dc52, stacked on M10 — git-verified. Ephemeral pins. Unmerged.
 - 2026-07-24 — **PAUSE at M12 design gate.** M7–M11 done. Loop halted before the heavy tier (recording) per the user's "real design for big items" intent — awaiting recording scope/audio/codec decisions. Auto-resume switch armed.
+- 2026-07-24 — **M16 done.** 2/2 tasks, reviews PASS. `swift test` 134/134 (123 + 11 M16). Branch `exec/m16-auto-redact-20260723` @ 7e6c117, stacked on M11 — git-verified. Regex PII detector (no ML dep); reused OCR + solidCensor. No y-flip (OCR + annotation both bottom-left). 10 `[auto]` decisions. Unmerged.

@@ -456,3 +456,19 @@ phase11/execute: [auto] Plan-text nit (both reviewers): plan Step 1 named Histor
 ### phase16/plan — `[auto]`
 - 2 tasks, 2 waves (T1 PIIDetector core → T2 editor Auto-Redact). Genuinely sequential (pure detector → its only consumer); peak parallelism 1. Plan: docs/plans/2026-07-23-m16-auto-redact.md.
 - Stacks on exec/m11-pin-to-screen-20260723; new branch exec/m16-auto-redact.
+
+## M16 — AI auto-redact (2026-07-23, /dev --auto v2)
+- phase16/execute: [auto] Base worktree exec/m16-auto-redact-20260723 branched from exec/m11-pin-to-screen-20260723 (M11 tip f69dc52), NOT main — M12–M15 skipped, M16 stacks on M11. Verified OCR.swift/Annotation.swift(.solidCensor)/VisionOCRService/EditorCanvas/ToolPalette present.
+- phase16/execute: [auto] No graphify graph present; plan is fully sequential (2 tasks, wave width 1, T2 depends on T1) so overlap analysis is moot — ran serial, no parallel dispatch. Noted parallelism-safety degradation is not applicable here.
+- phase16/execute: [auto] T1 phone regex = loose 8+ digit run with optional parens/spaces/dashes/plus (matches "(555) 123-4567" and "555-123-4567" per spec examples).
+- phase16/execute: [auto] T1 credit-card regex covers 13-digit (3-group) and 16-digit (4-group) space/dash forms plus \b\d{13,19}\b plain runs.
+- phase16/execute: [auto] T1 API-key class = \b[A-Za-z0-9_-]{20,}\b post-filtered for ≥1 letter AND ≥1 digit; no PIIClass toggle enum (YAGNI, per ponytail).
+- phase16/T2: [auto] Coord convention = NO flip. VisionOCRService converts Vision normalized (bottom-left) → pixel (bottom-left via y: bb.minY*h). EditorCanvas annotation space is also bottom-left (drawAnnotation vr() flips to SwiftUI top-left for rendering). OCR boxes pass through unchanged to .solidCensor(box).
+- phase16/T2: [auto] base CGImage routing: added var autoRedactBase: CGImage? to EditorViewModel; set via .onAppear in EditorCanvas. Avoids touching EditorWindow (not in manifest). ToolPalette calls Task { await vm.autoRedact() }.
+- phase16/T2: [auto] No toast/status for "no PII found" — no existing toast mechanism in editor, skipped per ponytail.
+- phase16/T2: [auto] Black solidCensor style = AnnotationStyle(strokeColor: black, fillColor: black, lineWidth: 0, fontSize: 0) — renderer fills with fillColor (solid black), matches how manual solidCensor draws.
+- phase16/execute: [auto] T2 coord convention = NO flip. OCR boxes are pixel bottom-left (VisionOCRService.swift:15 y: bb.minY*h) and .solidCensor annotation rects are stored bottom-left too (EditorCanvas vr() flips to SwiftUI top-left at draw via minY=height-r.maxY). Boxes pass through unchanged.
+- phase16/execute: [auto] T2 base CGImage routed to VM via vm.autoRedactBase set in EditorCanvas.onAppear (VM did not previously hold base); Auto-Redact button fires Task { await vm.autoRedact() }.
+- phase16/execute: [auto] T2 no toast built for empty/failed OCR (no existing status mechanism to reuse) — silent no-op per ponytail.
+- phase16/execute: [auto] T2 black censor style = AnnotationStyle with fillColor+strokeColor both RGBAColor(r:0,g:0,b:0,a:1); undo recorded once before the batch of boxes (single-action batch-undo semantics).
+- phase16/execute: [auto] eye.slash added as a plain action Button in ToolPalette, NOT a new Tool enum case (action vs mode).
