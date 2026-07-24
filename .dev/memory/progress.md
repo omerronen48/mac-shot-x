@@ -48,3 +48,23 @@ Phases don't merge to master (no-merge rule). Dependent phases stack: M2 branche
 ## ROADMAP COMPLETE — all 6 milestones built (2026-07-21)
 Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human integrates the stack + runs manual DoDs.
 **Human prerequisite for M6 DoD:** Apple Developer ID ($99/yr) to run `Scripts/make_dmg.sh` (notarize) → distributable DMG. All code/scripts/CI/README ship regardless.
+
+## v2 Phases (roadmap: docs/roadmaps/2026-07-23-macshot-v2.md) — parity with sw33tLie/macshot v4.2.1
+
+| # | Phase | Status | Notes |
+|---|-------|--------|-------|
+| M7 | Capture conveniences | pending | self-timer/countdown, capture-last-area, capture-cursor, downscale-Retina, correct loupe |
+| M8 | Editor parity | pending | line tool, solid censor, emoji/sticker, richer text styling |
+| M9 | QR & barcode reading | pending | Vision VNDetectBarcodes beside OCR |
+| M10 | Settings & menu-bar polish | pending | settings export/import, menu order+icon, Sparkle eval |
+| M11 | Pin-to-screen | pending | floating always-on-top pinned shots |
+| M12 | Screen recording (core) | pending | SCStream video, HUD, countdown, MP4/GIF/WebP — brainstorm ESCALATE forks |
+| M13 | Recording overlays & editor | pending | webcam/keystroke overlays, trim/freeze/speed; depends M12 |
+| M14 | Cloud upload & sharing | pending | share sheet, imgbb/S3/Drive OAuth — brainstorm ESCALATE providers/creds |
+| M15 | Live translation overlay | pending | OCR→translate→overlay; macOS15+ fork ESCALATE; depends M5/M9 |
+| M16 | AI auto-redact | pending | detect PII → censor; depends M5/M8 |
+| M17 | Scrolling capture | pending | synthetic scroll + stitch |
+| M18 | Localization (i18n) | pending | String Catalog + starter languages; LAST, depends M7–M17 |
+
+## Log (v2)
+- 2026-07-23 — v2 roadmap authored (M7–M18) for parity with sw33tLie/macshot v4.2.1. Loop resumes at M7. M7–M11 tractable/parallel-friendly; M12–M17 design-heavy (brainstorm + ESCALATE flagged forks); M18 (i18n) last.
