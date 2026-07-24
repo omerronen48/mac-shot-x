@@ -5,7 +5,7 @@ import MacShotCore
 // MARK: - Tool
 
 enum Tool {
-    case select, arrow, rectangle, ellipse, text, highlighter, blur, step
+    case select, arrow, rectangle, ellipse, text, highlighter, blur, step, line, solidCensor, emoji
 }
 
 // MARK: - ViewModel
@@ -21,7 +21,7 @@ final class EditorViewModel {
     var beautifyStyle: BeautifyStyle = .none
     let presetStore: PresetStore
 
-    private var inProgressID: UUID?
+    private(set) var inProgressID: UUID?
     private var dragStart: CGPoint?
 
     init(document: AnnotationDocument,
@@ -58,6 +58,19 @@ final class EditorViewModel {
         case .text:
             // text is committed via commitText(_:in:); no in-progress stroke
             break
+        case .line:
+            let a = Annotation(kind: .line(from: point, to: point), style: style)
+            document.add(a); inProgressID = a.id
+        case .solidCensor:
+            let a = Annotation(kind: .solidCensor(CGRect(origin: point, size: .zero)), style: style)
+            document.add(a); inProgressID = a.id
+        case .emoji:
+            // ponytail: place a placeholder emoji, then open the system character palette;
+            // the hidden NSTextField responder captures the chosen character and updates
+            // the annotation. Ceiling: palette sends characters to the focused input, not to
+            // arbitrary callbacks — a proper integration would use NSTextInputClient.
+            let a = Annotation(kind: .emoji(center: point, string: "", size: style.fontSize * 2), style: style)
+            document.add(a); inProgressID = a.id
         }
     }
 
@@ -103,8 +116,14 @@ final class EditorViewModel {
         case .blur:
             guard let id = inProgressID else { return }
             document.update(id: id) { a in a.kind = .blur(rect(from: start, to: point), radius: 10, pixelate: false) }
-        case .step, .text:
+        case .step, .text, .emoji:
             break
+        case .line:
+            guard let id = inProgressID else { return }
+            document.update(id: id) { a in a.kind = .line(from: start, to: point) }
+        case .solidCensor:
+            guard let id = inProgressID else { return }
+            document.update(id: id) { a in a.kind = .solidCensor(rect(from: start, to: point)) }
         }
     }
 
@@ -143,6 +162,7 @@ struct EditorCanvas: View {
 
     @State private var textInput: String = ""
     @State private var textRect: CGRect? = nil
+    @State private var emojiPickerActive = false
 
     var body: some View {
         GeometryReader { geo in
@@ -183,6 +203,9 @@ struct EditorCanvas: View {
                                     textRect = CGRect(origin: pt, size: CGSize(width: 200, height: 40))
                                     textInput = ""
                                 }
+                                if vm.activeTool == .emoji {
+                                    emojiPickerActive = true
+                                }
                             } else {
                                 vm.updateStroke(to: pt)
                             }
@@ -209,6 +232,29 @@ struct EditorCanvas: View {
                             textRect = nil
                             textInput = ""
                         }
+                }
+
+                // Emoji picker: hidden NSTextField becomes first responder so the system
+                // character palette can route its output to it.
+                // ponytail: ceiling is that NSApp.orderFrontCharacterPalette sends characters
+                // to the focused NSTextView; if the palette fires without focus we miss it.
+                // Upgrade path: implement NSTextInputClient on a custom NSView.
+                if emojiPickerActive, let eid = vm.inProgressID {
+                    EmojiCaptureField { str in
+                        if str.isEmpty {
+                            vm.document.remove(id: eid)
+                        } else {
+                            vm.document.update(id: eid) { a in
+                                if case let .emoji(c, _, sz) = a.kind {
+                                    a.kind = .emoji(center: c, string: str, size: sz)
+                                }
+                            }
+                        }
+                        emojiPickerActive = false
+                        vm.endStroke()
+                    }
+                    .frame(width: 1, height: 1)
+                    .opacity(0)
                 }
             }
         }
@@ -396,6 +442,45 @@ private struct BeautifyFrameView: View {
                 return AnyShapeStyle(ImagePaint(image: Image(nsImage: img)))
             }
             return AnyShapeStyle(Color(white: 0.5))
+        }
+    }
+}
+
+// MARK: - Emoji capture field
+
+/// Hidden NSTextField that becomes first responder, opens the system character palette,
+/// and fires `onCommit` with the first character typed (typically from the palette).
+/// ponytail: uses NSTextField as the input sink; the palette routes input to the focused
+/// text field. Ceiling: only captures characters typed/inserted while this field is focused;
+/// the palette dismissal is not observed directly. Upgrade: NSTextInputClient custom view.
+private struct EmojiCaptureField: NSViewRepresentable {
+    let onCommit: (String) -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(onCommit: onCommit) }
+
+    func makeNSView(context: Context) -> NSTextField {
+        let field = NSTextField()
+        field.isHidden = false
+        field.delegate = context.coordinator
+        DispatchQueue.main.async {
+            field.window?.makeFirstResponder(field)
+            NSApp.orderFrontCharacterPalette(nil)
+        }
+        return field
+    }
+
+    func updateNSView(_ nsView: NSTextField, context: Context) {}
+
+    class Coordinator: NSObject, NSTextFieldDelegate {
+        let onCommit: (String) -> Void
+        init(onCommit: @escaping (String) -> Void) { self.onCommit = onCommit }
+
+        func controlTextDidChange(_ obj: Notification) {
+            guard let field = obj.object as? NSTextField else { return }
+            let text = field.stringValue
+            guard !text.isEmpty else { return }
+            // Take first composed sequence (emoji may be multi-scalar)
+            onCommit(String(text.unicodeScalars.prefix(2).map(Character.init)))
         }
     }
 }

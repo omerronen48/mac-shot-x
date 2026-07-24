@@ -151,6 +151,9 @@ extension Tool: Hashable, RawRepresentable {
         case .highlighter: return 5
         case .blur:        return 6
         case .step:        return 7
+        case .line:        return 8
+        case .solidCensor: return 9
+        case .emoji:       return 10
         }
     }
 }
