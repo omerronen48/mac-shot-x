@@ -36,12 +36,21 @@ public enum AnnotationRenderer {
         case let .stepNumber(c, n):
             drawStep(center: c, number: n, in: ctx, style: a.style)
         case let .line(from, to):
+            ctx.setStrokeColor(a.style.strokeColor.cgColor)
+            ctx.setLineWidth(a.style.lineWidth)
             ctx.move(to: from); ctx.addLine(to: to); ctx.strokePath()
         case let .solidCensor(r):
-            ctx.setFillColor(a.style.strokeColor.cgColor); ctx.fill(r)
-        case let .emoji(c, s, size):
-            let r = CGRect(x: c.x - size/2, y: c.y - size/2, width: size, height: size)
-            drawText(s, in: r, ctx: ctx, style: a.style)
+            // ponytail: fillColor with black fallback; strokeColor is irrelevant for a solid censor
+            ctx.setFillColor((a.style.fillColor ?? RGBAColor(r: 0, g: 0, b: 0, a: 1)).cgColor); ctx.fill(r)
+        case let .emoji(center: c, string: s, size: size):
+            let font = CTFontCreateWithName("Helvetica" as CFString, size, nil)
+            let attrs: [CFString: Any] = [kCTFontAttributeName: font]
+            let cfAttr = CFAttributedStringCreate(nil, s as CFString, attrs as CFDictionary)!
+            let line = CTLineCreateWithAttributedString(cfAttr)
+            var ascent: CGFloat = 0, descent: CGFloat = 0, leading: CGFloat = 0
+            let lineWidth = CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
+            ctx.textPosition = CGPoint(x: c.x - lineWidth / 2, y: c.y - ascent / 2)
+            CTLineDraw(line, ctx)
         }
     }
 
@@ -57,6 +66,9 @@ public enum AnnotationRenderer {
 
     private static func drawText(_ s: String, in r: CGRect, ctx: CGContext, style: AnnotationStyle) {
         // ponytail: CoreText CFAttributedString to stay AppKit-free (NSAttributedString.Key.foregroundColor only accepts NSColor under AppKit)
+        if let bg = style.textBackgroundColor {
+            ctx.setFillColor(bg.cgColor); ctx.fill(r)
+        }
         let font = CTFontCreateWithName("Helvetica" as CFString, style.fontSize, nil)
         let attrs: [CFString: Any] = [
             kCTFontAttributeName: font,
@@ -64,7 +76,20 @@ public enum AnnotationRenderer {
         ]
         let cfAttr = CFAttributedStringCreate(nil, s as CFString, attrs as CFDictionary)!
         let line = CTLineCreateWithAttributedString(cfAttr)
-        ctx.textPosition = CGPoint(x: r.minX, y: r.minY + style.fontSize)
+        var ascent: CGFloat = 0, descent: CGFloat = 0, leading: CGFloat = 0
+        let lineWidth = CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
+        let xOffset: Double
+        switch style.textAlignment {
+        case .center: xOffset = (r.width - lineWidth) * 0.5
+        case .right:  xOffset = r.width - lineWidth
+        case .left:   xOffset = 0
+        }
+        ctx.textPosition = CGPoint(x: r.minX + xOffset, y: r.minY + style.fontSize)
+        if style.textOutline {
+            ctx.setTextDrawingMode(.fillStroke)
+            ctx.setStrokeColor(style.strokeColor.cgColor)
+            ctx.setLineWidth(1)
+        }
         CTLineDraw(line, ctx)
     }
 
