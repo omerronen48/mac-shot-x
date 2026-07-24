@@ -64,7 +64,7 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 | M15 | Live translation overlay | skipped | dropped by user 2026-07-24 (macOS 15+ dependency) |
 | M16 | AI auto-redact | done | branch `exec/m16-auto-redact-20260723` @ 7e6c117 (git-verified); 134/134; stacks on M11; unmerged |
 | M17 | Scrolling capture | done | branch `exec/m17-scrolling-capture-20260723` @ 654c2fb (git-verified); 138/138; stacks on M16; unmerged |
-| M18 | Localization (i18n) | planned | plan: docs/plans/2026-07-23-m18-localization.md (3 tasks); stacks on M17; FINAL |
+| M18 | Localization (i18n) | done | branch `exec/m18-localization-20260723` @ 9a04cb8 (git-verified); 142/142; stacks on M17; unmerged |
 
 ## Log (v2)
 - 2026-07-23 — v2 roadmap authored (M7–M18) for parity with sw33tLie/macshot v4.2.1. Loop resumes at M7. M7–M11 tractable/parallel-friendly; M12–M17 design-heavy (brainstorm + ESCALATE flagged forks); M18 (i18n) last.
@@ -84,3 +84,13 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 - 2026-07-24 — **PAUSE at M12 design gate.** M7–M11 done. Loop halted before the heavy tier (recording) per the user's "real design for big items" intent — awaiting recording scope/audio/codec decisions. Auto-resume switch armed.
 - 2026-07-24 — **M16 done.** 2/2 tasks, reviews PASS. `swift test` 134/134 (123 + 11 M16). Branch `exec/m16-auto-redact-20260723` @ 7e6c117, stacked on M11 — git-verified. Regex PII detector (no ML dep); reused OCR + solidCensor. No y-flip (OCR + annotation both bottom-left). 10 `[auto]` decisions. Unmerged.
 - 2026-07-24 — **M17 done.** 3/3 tasks, reviews PASS. `swift test` 138/138 (134 + 4 M17). Branch `exec/m17-scrolling-capture-20260723` @ 654c2fb, stacked on M16 — git-verified. Row-signature stitcher (pure, tested) + auto-scroll coordinator. Caught a multi-monitor flip-anchor bug via TDD. 8 `[auto]` decisions. Unmerged.
+
+## M18 Localization — DONE (2026-07-24)
+- Branch exec/m18-localization-20260723 (base exec/m17-scrolling-capture-20260723 @654c2fb). 4 commits: 4e8399c (T1 LocalizationAudit), 32f264c (T2 catalog+Package), 592f96c (T3 wrap), 9a04cb8 (T3 gap-fix). HEAD 9a04cb8.
+- .xcstrings PROCESSED by SwiftPM (no .strings fallback). 20 curated keys en+es/fr/de. 18 wrapped at real sites, 2 catalog-only.
+- Gate: swift build green, swift test 142/142 (138 M1–M17 preserved + 4 LocalizationAudit). All 3 tasks reviewer-PASS.
+- NOT merged/pushed — left for human. FINAL roadmap phase.
+- 2026-07-24 — **M18 done. v2 ROADMAP COMPLETE.** 3/3 tasks, reviews PASS. `swift test` 142/142 (138 + 4 M18). Branch `exec/m18-localization-20260723` @ 9a04cb8, stacked on M17 — git-verified. String Catalog (en+es/fr/de, 20 keys); .xcstrings processed by SwiftPM (no fallback). Unmerged.
+
+## v2 COMPLETE (2026-07-24)
+Built: M7,M8,M9,M10,M11,M16,M17,M18. Skipped by user: M12,M13 (recording), M14 (cloud), M15 (translation). Linear stack M1–M6(main) → M7 → M8 → M9 → M10 → M11 → M16 → M17 → M18. Human merges the stack. Loop disarmed.
