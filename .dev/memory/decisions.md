@@ -421,3 +421,8 @@ phase10/review: [auto] T3 (Preferences M10 fields) PASS. Commit 1186782 — 2 fi
 - Wiring: new `PanelAction.pinToScreen` (DISTINCT from M2's `.pin` = pin-in-history); QuickAccessPanel + HistoryWindow gain a "Pin to Screen" action; `OverlayController.onPinToScreen` callback; AppDelegate → `PinController.pin(image:)`.
 - Persistence: pins are **EPHEMERAL** — not restored across relaunch (ponytail: no store/bookmark plumbing). Reversible.
 - Interactions default: drag-move + corner-resize + right-click menu. Reversible.
+
+### phase11/plan — `[auto]`
+- 7 tasks, 4 waves, peak parallelism 3 (W1 PinGeometry‖QuickAccessPanel‖HistoryWindow). Plan: docs/plans/2026-07-23-m11-pin-to-screen.md.
+- Stacks on exec/m10-settings-menubar-20260723; new branch exec/m11-pin-to-screen.
+- `PanelAction.pinToScreen` (new, distinct from M2 `.pin`); T2 adds the enum case, T5 adds the exhaustive switch arm — sequenced W1→W2 so the whole-package build gate follows both.
