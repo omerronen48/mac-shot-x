@@ -6,9 +6,11 @@ import ScreenCaptureKit
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
-    private let prefs = Preferences(store: UserDefaults.standard)
+    // ponytail: single shared Preferences instance; capturer uses the same object so
+    // cursor/downscale prefs are always in sync.
+    private let prefs: Preferences
     private let sink = SystemSink()
-    private let capturer = SCKScreenCapturer()
+    private let capturer: SCKScreenCapturer
     private let notifier = Notifier()
     private let hotkeyManager = HotkeyManager()
     private let permissionFlow = PermissionFlow()
@@ -26,6 +28,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     nonisolated(unsafe) private var engine: CaptureEngine!
 
     private var statusItem: NSStatusItem?
+
+    override init() {
+        let p = Preferences(store: UserDefaults.standard)
+        prefs = p
+        capturer = SCKScreenCapturer(prefs: p)
+        super.init()
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         engine = CaptureEngine(capturer: capturer, sink: sink, preferences: prefs)
@@ -79,6 +88,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(withTitle: "Capture Window",     action: #selector(captureWindow),     keyEquivalent: "")
         menu.addItem(withTitle: "Capture Fullscreen", action: #selector(captureFullscreen), keyEquivalent: "")
         menu.addItem(withTitle: "Capture Text (OCR)", action: #selector(captureText),       keyEquivalent: "")
+        menu.addItem(withTitle: "Capture Last Area",  action: #selector(captureLastArea),   keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "History…",     action: #selector(openHistory),     keyEquivalent: "")
         menu.addItem(withTitle: "Preferences…", action: #selector(openPreferences), keyEquivalent: "")
@@ -94,6 +104,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func openHistory()        { historyWindowController?.refresh(); historyWindowController?.show() }
     @objc private func openPreferences()   { prefsWindowController.show() }
     @objc private func quitApp()           { NSApp.terminate(nil) }
+
+    @objc private func captureLastArea() {
+        guard let rect = prefs.lastAreaRect else {
+            notifier.notifyError("No previous area to capture")
+            return
+        }
+        // ponytail: skipOverlay=true — bypasses selection UI, captures stored rect directly
+        runCapture(mode: .area(rect), skipOverlay: true)
+    }
 
     // MARK: - Hotkey registration
 
@@ -114,16 +133,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 Task { await self?.ocrCoordinator?.run() }
             }
         }
+        // id 5: Capture Last Area hotkey; included in unregisterAll via hotkeyManager
+        if let spec = try? HotkeySpec(string: prefs.lastAreaHotkey) {
+            hotkeyManager.register(spec, id: 5) { [weak self] in
+                self?.captureLastArea()
+            }
+        }
     }
 
     // MARK: - Capture flow
 
-    private func runCapture(mode: CaptureMode) {
+    // ponytail: skipOverlay=true used by Capture Last Area to bypass selection UI
+    private func runCapture(mode: CaptureMode, skipOverlay: Bool = false) {
         Task { @MainActor in
+            // Self-timer: if delay > 0, show countdown; cancel aborts the capture
+            let delay = prefs.captureDelaySeconds
+            if delay > 0 {
+                // ponytail: withCheckedContinuation bridges the completion callbacks to async/await.
+                // Both onFinish/onCancel run on the main actor (CountdownView is @MainActor).
+                // Bool=true means countdown expired (proceed); false means Esc (abort).
+                let proceeded = await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
+                    CountdownView().present(
+                        seconds: delay,
+                        onFinish: { cont.resume(returning: true) },
+                        onCancel:  { cont.resume(returning: false) }
+                    )
+                }
+                guard proceeded else { return }
+            }
+
             let resolvedMode: CaptureMode
-            if mode.needsSelectionUI {
+            if !skipOverlay && mode.needsSelectionUI {
+                // Take loupe snapshot before presenting overlay
+                let snap = try? await capturer.captureDisplayImage()
                 let windowList = (try? await fetchWindowList()) ?? []
-                guard let m = await presentOverlay(mode: mode, windows: windowList) else { return }
+                guard let m = await presentOverlay(mode: mode, windows: windowList, screenshot: snap) else { return }
+                // Persist confirmed area rect for Capture Last Area
+                if case .area(let rect) = m, let rect {
+                    prefs.lastAreaRect = rect
+                }
                 resolvedMode = m
             } else {
                 resolvedMode = mode
@@ -161,9 +209,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // ponytail: bridge completion-handler API to async via continuation
-    private func presentOverlay(mode: CaptureMode, windows: [(CGWindowID, CGRect)]) async -> CaptureMode? {
+    private func presentOverlay(mode: CaptureMode, windows: [(CGWindowID, CGRect)], screenshot: CGImage? = nil) async -> CaptureMode? {
         await withCheckedContinuation { continuation in
-            overlay.present(mode: mode, windows: windows) { result in
+            overlay.present(mode: mode, windows: windows, screenshot: screenshot, preferences: prefs) { result in
                 continuation.resume(returning: result)
             }
         }
