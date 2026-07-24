@@ -34,3 +34,5 @@
 - **Solid censor** — opaque redaction bar annotation (`.solidCensor`), distinct from blur/pixelate; fully hides content.
 - **Emoji annotation** — an emoji glyph placed on the image (`.emoji`), picked via the macOS character palette.
 - **TextAlignment (MacShotCore)** — left/center/right enum for text annotation layout (not SwiftUI's).
+- **BarcodeObservation** — a decoded QR/barcode: payload + symbology + bounding box (MacShotCore, Vision-free value).
+- **BarcodeService / VisionBarcodeService** — protocol + Vision (VNDetectBarcodesRequest) impl; on-device QR/barcode detection in the OCR capture flow.
