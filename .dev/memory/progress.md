@@ -56,7 +56,7 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 | M7 | Capture conveniences | done | branch `exec/m7-capture-conveniences-20260723` @ 2a08ad2 (git-verified); 93/93 tests; off main; unmerged |
 | M8 | Editor parity | done | branch `exec/m8-editor-parity-20260723` @ 8a85ba8 (git-verified); 104/104; stacks on M7; unmerged |
 | M9 | QR & barcode reading | done | branch `exec/m9-qr-barcode-20260723` @ 286145e (git-verified); 110/110 tests (M1–M8 104 + M9 6); stacks on M8; unmerged |
-| M10 | Settings & menu-bar polish | planned | plan: docs/plans/2026-07-23-m10-settings-menubar.md (5 tasks); stacks on M9 |
+| M10 | Settings & menu-bar polish | done | branch `exec/m10-settings-menubar-20260723` @ 694746d (git-verified); 120/120; stacks on M9; unmerged |
 | M11 | Pin-to-screen | pending | floating always-on-top pinned shots |
 | M12 | Screen recording (core) | pending | SCStream video, HUD, countdown, MP4/GIF/WebP — brainstorm ESCALATE forks |
 | M13 | Recording overlays & editor | pending | webcam/keystroke overlays, trim/freeze/speed; depends M12 |
@@ -79,3 +79,4 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 - 2026-07-23 — **M7 done.** 9/9 tasks, all reviews PASS. `swift test` 93/93. `swift build` clean. Branch `exec/m7-capture-conveniences-20260723` @ 2a08ad2, based on main (base independently git-verified). 9 `[auto]` decisions. 6 M7 lessons logged (loupe-no-recursion, cursor→pixel Y-flip, click-through Esc global monitor, Timer assumeIsolated, capturer prefs default+nonisolated(unsafe), serialize same-target GUI waves). Unmerged.
 - 2026-07-23 — **M8 done.** 5/5 tasks, reviews PASS. `swift test` 104/104 (93 + 11 M8). Branch `exec/m8-editor-parity-20260723` @ 8a85ba8, stacked on M7 — git-verified (5 commits atop 2a08ad2). Additive kinds/styles; M3 back-compat proven (testM3EraJSONDecodesWithDefaults). 8 `[auto]` decisions, 6 lessons (TextAlignment module-collision, custom init(from:) disables encode synthesis, never pixel-assert emoji). Unmerged.
 - 2026-07-23 — **M9 done.** 4/4 tasks, reviews PASS. `swift test` 110/110 (104 + 6 M9). Branch `exec/m9-qr-barcode-20260723` @ 286145e, stacked on M8 — git-verified. No new hotkey (folds into OCR capture). 7 `[auto]` decisions, 4 lessons (Vision's own BarcodeObservation type collides — module-qualify). Unmerged.
+- 2026-07-24 — **M10 done.** 6 tasks (incl. T6 comma-keycode fix so the ⌃⌘⇧, lockout-guard hotkey registers). `swift test` 120/120 (110 + 10 M10). Branch `exec/m10-settings-menubar-20260723` @ 694746d, stacked on M9 — git-verified. Sparkle declined; hand-rolled updater kept. 8 `[auto]` decisions. Unmerged.
