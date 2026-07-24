@@ -60,8 +60,8 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 | M11 | Pin-to-screen | done | branch `exec/m11-pin-to-screen-20260723` @ f69dc52 (git-verified); 123/123; stacks on M10; unmerged |
 | M12 | Screen recording (core) | skipped | dropped by user 2026-07-24 — recording out of scope |
 | M13 | Recording overlays & editor | skipped | dropped by user 2026-07-24 (depends on M12) |
-| M14 | Cloud upload & sharing | pending | share sheet, imgbb/S3/Drive OAuth — brainstorm ESCALATE providers/creds |
-| M15 | Live translation overlay | pending | OCR→translate→overlay; macOS15+ fork ESCALATE; depends M5/M9 |
+| M14 | Cloud upload & sharing | skipped | dropped by user 2026-07-24 |
+| M15 | Live translation overlay | skipped | dropped by user 2026-07-24 (macOS 15+ dependency) |
 | M16 | AI auto-redact | pending | detect PII → censor; depends M5/M8 |
 | M17 | Scrolling capture | pending | synthetic scroll + stitch |
 | M18 | Localization (i18n) | pending | String Catalog + starter languages; LAST, depends M7–M17 |

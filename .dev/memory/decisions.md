@@ -441,3 +441,6 @@ phase11/execute: [auto] Plan-text nit (both reviewers): plan Step 1 named Histor
 
 ## v2 — M12/M13 SKIPPED
 - `[escalated]` 2026-07-24 — user chose **skip recording entirely**. M12 (screen recording core) and M13 (recording overlays + video editor) dropped from the v2 roadmap. Rationale: recording is a large lift for a screenshot tool; not wanted. Loop continues with the remaining on-device features.
+
+## v2 — remaining scope locked (2026-07-24)
+- `[escalated]` user picks: BUILD M16 (auto-redact), M17 (scrolling capture), M18 (localization). SKIP M14 (cloud upload) + M15 (translation, macOS-15 dependency). Order: M16 → M17 → M18 (i18n last, cross-cutting). Each stacks on the previous built branch (M16 on M11).
