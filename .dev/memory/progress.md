@@ -54,7 +54,7 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 | # | Phase | Status | Notes |
 |---|-------|--------|-------|
 | M7 | Capture conveniences | done | branch `exec/m7-capture-conveniences-20260723` @ 2a08ad2 (git-verified); 93/93 tests; off main; unmerged |
-| M8 | Editor parity | planned | plan: docs/plans/2026-07-23-m8-editor-parity.md (5 tasks); stacks on M7 |
+| M8 | Editor parity | done | branch `exec/m8-editor-parity-20260723` @ 8a85ba8 (git-verified); 104/104; stacks on M7; unmerged |
 | M9 | QR & barcode reading | pending | Vision VNDetectBarcodes beside OCR |
 | M10 | Settings & menu-bar polish | pending | settings export/import, menu order+icon, Sparkle eval |
 | M11 | Pin-to-screen | pending | floating always-on-top pinned shots |
@@ -77,3 +77,4 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 - Deferred to human DoD: manual acceptance (3s self-timer → capture; drag area then Capture Last Area re-captures it; cursor toggle + downscale reflected in output ~4× smaller; loupe magnifies under cursor with no crash + edge clamp). GUI tasks build-gated, no fabricated unit tests by design.
 - Notable: T6 window-mode capture sets showsCursor but does NOT downscale (only fullscreen/area do) — reviewer flagged as ambiguous-non-blocking follow-up. Loupe edge case: drawLoupe returns (no loupe) when cursor within loupeSize/(2·mag) of a snapshot edge (crop fails) — cosmetic follow-up (clamp sampleRect). Both non-blocking.
 - 2026-07-23 — **M7 done.** 9/9 tasks, all reviews PASS. `swift test` 93/93. `swift build` clean. Branch `exec/m7-capture-conveniences-20260723` @ 2a08ad2, based on main (base independently git-verified). 9 `[auto]` decisions. 6 M7 lessons logged (loupe-no-recursion, cursor→pixel Y-flip, click-through Esc global monitor, Timer assumeIsolated, capturer prefs default+nonisolated(unsafe), serialize same-target GUI waves). Unmerged.
+- 2026-07-23 — **M8 done.** 5/5 tasks, reviews PASS. `swift test` 104/104 (93 + 11 M8). Branch `exec/m8-editor-parity-20260723` @ 8a85ba8, stacked on M7 — git-verified (5 commits atop 2a08ad2). Additive kinds/styles; M3 back-compat proven (testM3EraJSONDecodesWithDefaults). 8 `[auto]` decisions, 6 lessons (TextAlignment module-collision, custom init(from:) disables encode synthesis, never pixel-assert emoji). Unmerged.
