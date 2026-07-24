@@ -7,6 +7,7 @@ import MacShotCore
 final class PreferencesModel: ObservableObject {
     let prefs = Preferences(store: UserDefaults.standard)
     var onHotkeysChanged: (() -> Void)?
+    var onSettingsChanged: (() -> Void)?
 
     @Published var saveDirectoryPath: String
     @Published var filenameFormat: String
@@ -25,6 +26,10 @@ final class PreferencesModel: ObservableObject {
     @Published var loupeMagnification: Double
     @Published var loupeOutlineEnabled: Bool
     @Published var loupeOutlineColor: RGBAColor
+    @Published var menuBarIconSymbol: String
+    @Published var hideMenuBarIcon: Bool
+    @Published var menuOrder: MacShotCore.MenuOrder
+    @Published var preferencesHotkey: String
 
     init() {
         let p = Preferences(store: UserDefaults.standard)
@@ -45,6 +50,35 @@ final class PreferencesModel: ObservableObject {
         loupeMagnification   = p.loupeMagnification
         loupeOutlineEnabled  = p.loupeOutlineEnabled
         loupeOutlineColor    = p.loupeOutlineColor
+        menuBarIconSymbol    = p.menuBarIconSymbol
+        hideMenuBarIcon      = p.hideMenuBarIcon
+        menuOrder            = p.menuOrder
+        preferencesHotkey    = p.preferencesHotkey
+    }
+
+    /// Reload all @Published mirrors from UserDefaults (called after import).
+    func reloadFromStore() {
+        let p = Preferences(store: UserDefaults.standard)
+        saveDirectoryPath    = p.saveDirectoryPath
+        filenameFormat       = p.filenameFormat
+        copyToClipboard      = p.copyToClipboard
+        saveToFile           = p.saveToFile
+        areaHotkey           = p.areaHotkey
+        windowHotkey         = p.windowHotkey
+        fullscreenHotkey     = p.fullscreenHotkey
+        ocrHotkey            = p.ocrHotkey
+        captureDelaySeconds  = p.captureDelaySeconds
+        captureCursor        = p.captureCursor
+        downscaleRetina      = p.downscaleRetina
+        lastAreaHotkey       = p.lastAreaHotkey
+        loupeSize            = p.loupeSize
+        loupeMagnification   = p.loupeMagnification
+        loupeOutlineEnabled  = p.loupeOutlineEnabled
+        loupeOutlineColor    = p.loupeOutlineColor
+        menuBarIconSymbol    = p.menuBarIconSymbol
+        hideMenuBarIcon      = p.hideMenuBarIcon
+        menuOrder            = p.menuOrder
+        preferencesHotkey    = p.preferencesHotkey
     }
 
     func setLaunchAtLogin(_ on: Bool) {
@@ -129,6 +163,31 @@ final class PreferencesModel: ObservableObject {
         prefs.loupeOutlineColor = c
         loupeOutlineColor = c
     }
+
+    func commitMenuBarIconSymbol(_ v: String) {
+        prefs.menuBarIconSymbol = v
+        menuBarIconSymbol = v
+        onSettingsChanged?()
+    }
+
+    func commitHideMenuBarIcon(_ v: Bool) {
+        prefs.hideMenuBarIcon = v
+        hideMenuBarIcon = v
+        onSettingsChanged?()
+    }
+
+    func commitMenuOrder(_ order: MacShotCore.MenuOrder) {
+        prefs.menuOrder = order
+        menuOrder = order
+        onSettingsChanged?()
+    }
+
+    func recordPreferencesHotkey(_ spec: HotkeySpec) {
+        prefs.preferencesHotkey = spec.description
+        preferencesHotkey = spec.description
+        onHotkeysChanged?()
+        onSettingsChanged?()
+    }
 }
 
 struct PreferencesView: View {
@@ -140,6 +199,14 @@ struct PreferencesView: View {
 
     var body: some View {
         Form {
+            // General — export / import settings
+            Section("General") {
+                HStack {
+                    Button("Export Settings…") { exportSettings() }
+                    Button("Import Settings…") { importSettings() }
+                }
+            }
+
             // Save directory
             Section("Save Location") {
                 HStack {
@@ -238,6 +305,38 @@ struct PreferencesView: View {
                     ))
                 }
             }
+
+            // Menu Bar — icon, hide, order, preferences hotkey
+            Section("Menu Bar") {
+                // ponytail: macOS List supports drag-to-reorder via .onMove without EditButton (iOS-only)
+                Text("Menu order (drag to reorder)")
+                List {
+                    ForEach(model.menuOrder.items, id: \.self) { action in
+                        Text(action.label)
+                    }
+                    .onMove { from, to in
+                        var order = model.menuOrder
+                        order.move(from: from.first ?? 0, to: to)
+                        model.commitMenuOrder(order)
+                    }
+                }
+                .frame(height: 140)
+
+                // Symbol name field + live preview
+                HStack {
+                    TextField("Icon symbol", text: $model.menuBarIconSymbol)
+                        .onSubmit { model.commitMenuBarIconSymbol(model.menuBarIconSymbol) }
+                    Image(systemName: model.menuBarIconSymbol)
+                        .frame(width: 20)
+                }
+
+                Toggle("Hide menu-bar icon", isOn: $model.hideMenuBarIcon)
+                    .onChange(of: model.hideMenuBarIcon) { _, v in model.commitHideMenuBarIcon(v) }
+
+                hotkeyRow(label: "Open Preferences") {
+                    HotkeyRecorderField(current: model.preferencesHotkey) { model.recordPreferencesHotkey($0) }
+                }
+            }
         }
         .formStyle(.grouped)
         .frame(minWidth: 440, minHeight: 360)
@@ -262,6 +361,30 @@ struct PreferencesView: View {
             model.commitDirectory(url.path)
         }
     }
+
+    private func exportSettings() {
+        let data = SettingsBundle.export(from: UserDefaults.standard)
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "MacShot-Settings.json"
+        panel.allowedContentTypes = [.json]
+        if panel.runModal() == .OK, let url = panel.url {
+            try? data.write(to: url)
+        }
+    }
+
+    private func importSettings() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [.json]
+        if panel.runModal() == .OK, let url = panel.url,
+           let data = try? Data(contentsOf: url) {
+            SettingsBundle.load(data, into: UserDefaults.standard)
+            model.reloadFromStore()
+            model.onSettingsChanged?()
+        }
+    }
 }
 
 // MARK: - Public entry point
@@ -275,6 +398,12 @@ public final class PreferencesWindowController {
     public var onHotkeysChanged: (() -> Void)? {
         get { model.onHotkeysChanged }
         set { model.onHotkeysChanged = newValue }
+    }
+
+    /// Callback invoked when menu order, icon symbol, hide-icon, or settings import change.
+    public var onSettingsChanged: (() -> Void)? {
+        get { model.onSettingsChanged }
+        set { model.onSettingsChanged = newValue }
     }
 
     public init() {}
@@ -295,5 +424,19 @@ public final class PreferencesWindowController {
         self.window = win
         win.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+}
+
+// MARK: - Helpers
+
+private extension CaptureAction {
+    var label: String {
+        switch self {
+        case .area:       return "Capture Area"
+        case .window:     return "Capture Window"
+        case .fullscreen: return "Capture Fullscreen"
+        case .ocr:        return "Capture Text (OCR)"
+        case .lastArea:   return "Capture Last Area"
+        }
     }
 }
