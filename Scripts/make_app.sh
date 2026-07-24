@@ -22,6 +22,13 @@ cp "$SCRIPT_DIR/Info.plist" "$APP/Contents/Info.plist"
 if [ ! -f "$SCRIPT_DIR/AppIcon.icns" ]; then bash "$SCRIPT_DIR/make_icon.sh"; fi
 cp "$SCRIPT_DIR/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 
+# Copy SwiftPM resource bundles (e.g. MacShot_MacShot.bundle holding Localizable.xcstrings)
+# so Bundle.module / String(localized:bundle:.module) can find them — otherwise the app
+# fatal-errors at the first localized string.
+for b in "$BIN_DIR"/*.bundle; do
+  [ -e "$b" ] && cp -R "$b" "$APP/Contents/Resources/" && echo "bundled resource: $(basename "$b")"
+done
+
 # Sign with a stable identity so the TCC/Screen-Recording grant persists across rebuilds.
 # Priority: MACSHOT_SIGN_ID → any real identity in the keychain (Apple Development, etc.) → ad-hoc.
 SIGN_ID="${MACSHOT_SIGN_ID:-}"
