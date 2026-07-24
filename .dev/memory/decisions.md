@@ -507,3 +507,8 @@ phase11/execute: [auto] Plan-text nit (both reviewers): plan Step 1 named Histor
 - Package.swift: add `defaultLocalization: "en"` to the targets + `.process("Localizable.xcstrings")` resource; `Sources/MacShot/Localizable.xcstrings` holds the catalog; shell strings wrapped in `String(localized:table:bundle:.module)`.
 - Skipped: pseudo-localization QA; full 41-language translation (framework + starter set is the DoD); filename localization (FilenameFormatter stays en_US_POSIX for stable filenames).
 - Locale-aware UI date/number formatting uses the system locale (default DateFormatter/NumberFormatter behavior); no change to the stable-filename formatter.
+
+### phase18/plan — `[auto]`
+- 3 tasks, 2 waves, peak parallelism 2 (W1 LocalizationAudit ‖ Catalog+Package). Plan: docs/plans/2026-07-23-m18-localization.md.
+- Stacks on exec/m17-scrolling-capture-20260723; new branch exec/m18-localization. FINAL v2 milestone.
+- Curated ~20-key set fixed in the plan header (menu/notification/prefs); all 3 tasks use identical key strings. `.strings`/`.stringsdict` fallback logged if SwiftPM can't process `.xcstrings`.
