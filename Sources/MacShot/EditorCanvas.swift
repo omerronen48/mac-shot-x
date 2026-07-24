@@ -79,6 +79,12 @@ final class EditorViewModel {
                 case let .blur(r, rad, px): a.kind = .blur(r.offsetBy(dx: delta.x, dy: delta.y), radius: rad, pixelate: px)
                 case let .stepNumber(c, n):
                     a.kind = .stepNumber(center: CGPoint(x: c.x + delta.x, y: c.y + delta.y), number: n)
+                case let .line(from, to):
+                    a.kind = .line(from: CGPoint(x: from.x + delta.x, y: from.y + delta.y),
+                                   to: CGPoint(x: to.x + delta.x, y: to.y + delta.y))
+                case let .solidCensor(r): a.kind = .solidCensor(r.offsetBy(dx: delta.x, dy: delta.y))
+                case let .emoji(c, s, size):
+                    a.kind = .emoji(center: CGPoint(x: c.x + delta.x, y: c.y + delta.y), string: s, size: size)
                 }
             }
             dragStart = point  // incremental delta
@@ -306,6 +312,16 @@ struct EditorCanvas: View {
                 Text("\(n)").font(.system(size: 18 * scale, weight: .bold)).foregroundColor(.white),
                 at: vc, anchor: .center
             )
+
+        case let .line(from, to):
+            var p = Path(); p.move(to: vp(from)); p.addLine(to: vp(to))
+            ctx.stroke(p, with: .color(stroke), lineWidth: lw)
+
+        case let .solidCensor(r):
+            ctx.fill(Path(vr(r)), with: .color(stroke))
+
+        case let .emoji(c, s, size):
+            ctx.draw(Text(s).font(.system(size: size * scale)), at: vp(c), anchor: .center)
         }
 
         // Selection highlight

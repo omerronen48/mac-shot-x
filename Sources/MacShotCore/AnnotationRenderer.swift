@@ -35,6 +35,13 @@ public enum AnnotationRenderer {
             drawBlur(region: r, radius: radius, pixelate: pixelate, in: ctx, base: base)
         case let .stepNumber(c, n):
             drawStep(center: c, number: n, in: ctx, style: a.style)
+        case let .line(from, to):
+            ctx.move(to: from); ctx.addLine(to: to); ctx.strokePath()
+        case let .solidCensor(r):
+            ctx.setFillColor(a.style.strokeColor.cgColor); ctx.fill(r)
+        case let .emoji(c, s, size):
+            let r = CGRect(x: c.x - size/2, y: c.y - size/2, width: size, height: size)
+            drawText(s, in: r, ctx: ctx, style: a.style)
         }
     }
 
