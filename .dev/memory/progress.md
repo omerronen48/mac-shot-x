@@ -58,8 +58,8 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 | M9 | QR & barcode reading | done | branch `exec/m9-qr-barcode-20260723` @ 286145e (git-verified); 110/110 tests (M1–M8 104 + M9 6); stacks on M8; unmerged |
 | M10 | Settings & menu-bar polish | done | branch `exec/m10-settings-menubar-20260723` @ 694746d (git-verified); 120/120; stacks on M9; unmerged |
 | M11 | Pin-to-screen | done | branch `exec/m11-pin-to-screen-20260723` @ f69dc52 (git-verified); 123/123; stacks on M10; unmerged |
-| M12 | Screen recording (core) | pending | SCStream video, HUD, countdown, MP4/GIF/WebP — brainstorm ESCALATE forks |
-| M13 | Recording overlays & editor | pending | webcam/keystroke overlays, trim/freeze/speed; depends M12 |
+| M12 | Screen recording (core) | skipped | dropped by user 2026-07-24 — recording out of scope |
+| M13 | Recording overlays & editor | skipped | dropped by user 2026-07-24 (depends on M12) |
 | M14 | Cloud upload & sharing | pending | share sheet, imgbb/S3/Drive OAuth — brainstorm ESCALATE providers/creds |
 | M15 | Live translation overlay | pending | OCR→translate→overlay; macOS15+ fork ESCALATE; depends M5/M9 |
 | M16 | AI auto-redact | pending | detect PII → censor; depends M5/M8 |
