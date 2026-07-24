@@ -56,7 +56,7 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 | M7 | Capture conveniences | done | branch `exec/m7-capture-conveniences-20260723` @ 2a08ad2 (git-verified); 93/93 tests; off main; unmerged |
 | M8 | Editor parity | done | branch `exec/m8-editor-parity-20260723` @ 8a85ba8 (git-verified); 104/104; stacks on M7; unmerged |
 | M9 | QR & barcode reading | done | branch `exec/m9-qr-barcode-20260723` @ 286145e (git-verified); 110/110 tests (M1–M8 104 + M9 6); stacks on M8; unmerged |
-| M10 | Settings & menu-bar polish | pending | settings export/import, menu order+icon, Sparkle eval |
+| M10 | Settings & menu-bar polish | planned | plan: docs/plans/2026-07-23-m10-settings-menubar.md (5 tasks); stacks on M9 |
 | M11 | Pin-to-screen | pending | floating always-on-top pinned shots |
 | M12 | Screen recording (core) | pending | SCStream video, HUD, countdown, MP4/GIF/WebP — brainstorm ESCALATE forks |
 | M13 | Recording overlays & editor | pending | webcam/keystroke overlays, trim/freeze/speed; depends M12 |

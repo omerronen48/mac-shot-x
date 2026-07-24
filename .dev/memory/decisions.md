@@ -374,3 +374,8 @@ phase7/review-t6: [auto] SCKScreenCapturer T6 PASS. showsCursor+downscale wired 
 - Preferences additions: `menuBarIconSymbol:String` (default "camera.viewfinder"), `hideMenuBarIcon:Bool` (default false), `preferencesHotkey:String` (default "⌃⌘⇧,").
 - **Hide-icon lockout guard:** when `hideMenuBarIcon`, the status item is removed BUT a global `preferencesHotkey` (default ⌃⌘⇧,) always opens Preferences — so the user can never lock themselves out. Reversible.
 - Menu-bar icon picker: an SF Symbol NAME text field + a live preview (Image(systemName:)) + hide toggle. Not a full symbol browser. Reversible.
+
+### phase10/plan — `[auto]`
+- 5 tasks, 3 waves, peak parallelism 2 (W1 SettingsBundle‖MenuOrder; W3 PreferencesWindow‖AppDelegate). Plan: docs/plans/2026-07-23-m10-settings-menubar.md.
+- Stacks on exec/m9-qr-barcode-20260723; new branch exec/m10-settings-menubar.
+- Preferences `store` made `internal` (was private) so SettingsBundle/UI can serialize it; SettingsBundle uses an allow-list (exportableKeys), excluding history/secrets.
