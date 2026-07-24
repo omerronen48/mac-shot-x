@@ -18,7 +18,7 @@ public final class InMemoryKVStore: KeyValueStore {
 
 /// UserDefaults-backed preferences (roadmap: PNG files + UserDefaults, no DB).
 public struct Preferences {
-    private let store: KeyValueStore
+    let store: KeyValueStore
     public init(store: KeyValueStore) { self.store = store }
 
     private func s(_ k: String, _ def: String) -> String { store.string(forKey: k) ?? def }
@@ -91,5 +91,20 @@ public struct Preferences {
             return RGBAColor(r: a[0], g: a[1], b: a[2], a: a[3])
         }
         nonmutating set { store.set([newValue.r, newValue.g, newValue.b, newValue.a], forKey: "loupeOutlineColor") }
+    }
+    public var menuBarIconSymbol: String { get { s("menuBarIconSymbol", "camera.viewfinder") } nonmutating set { store.set(newValue, forKey: "menuBarIconSymbol") } }
+    public var hideMenuBarIcon: Bool { get { b("hideMenuBarIcon", false) } nonmutating set { store.set(newValue, forKey: "hideMenuBarIcon") } }
+    public var preferencesHotkey: String { get { s("preferencesHotkey", "⌃⌘⇧,") } nonmutating set { store.set(newValue, forKey: "preferencesHotkey") } }
+    public var menuOrder: MenuOrder {
+        get {
+            guard let raw = store.string(forKey: "menuOrder"), let d = raw.data(using: .utf8),
+                  let o = try? JSONDecoder().decode(MenuOrder.self, from: d) else { return .default }
+            return o.normalized()
+        }
+        nonmutating set {
+            if let d = try? JSONEncoder().encode(newValue.normalized()), let str = String(data: d, encoding: .utf8) {
+                store.set(str, forKey: "menuOrder")
+            }
+        }
     }
 }
