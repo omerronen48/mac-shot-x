@@ -31,3 +31,6 @@
 - **CountdownView** — borderless window shown during a self-timer delay before capture.
 - **DownscaleTransform** — pure MacShotCore logic: halve retina dimensions for ~4× smaller files (opt-in).
 - **LoupeGeometry** — pure MacShotCore logic for the magnifier: sample-region rect in a cached screen image + clamped on-screen loupe rect. The overlay samples a screen snapshot taken at present-time (never cacheDisplay-in-draw).
+- **Solid censor** — opaque redaction bar annotation (`.solidCensor`), distinct from blur/pixelate; fully hides content.
+- **Emoji annotation** — an emoji glyph placed on the image (`.emoji`), picked via the macOS character palette.
+- **TextAlignment (MacShotCore)** — left/center/right enum for text annotation layout (not SwiftUI's).

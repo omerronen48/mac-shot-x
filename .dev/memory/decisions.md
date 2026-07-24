@@ -301,3 +301,13 @@ phase7/review-t6: [auto] SCKScreenCapturer T6 PASS. showsCursor+downscale wired 
 - phase7/execute: [auto] Capture Last Area (T9) avoids the selection overlay via a `skipOverlay: Bool = false` param on `runCapture` — reuses the single engine.capture path, zero SCK-pipeline duplication.
 - phase7/execute: [auto] SCKScreenCapturer init gained `prefs: Preferences` with a default (`UserDefaults.standard`) — backward compatible; AppDelegate passes the shared `prefs` so cursor/downscale prefs take effect.
 - phase7/execute: [auto] SelectionOverlay.present + capturer.captureDisplayImage kept backward compatible via defaulted params (screenshot/preferences default nil → no loupe); existing callers (OCRCoordinator, old AppDelegate sites) unchanged.
+
+## v2 — M8 (Editor parity)
+
+### phase8/brainstorm — all `[auto]`, reversible
+- New `AnnotationKind` cases (keep existing M3 cases intact for Codable/back-compat): `.line(from:CGPoint,to:CGPoint)` (straight line, no arrowhead — arrow minus the head); `.solidCensor(CGRect)` (opaque redaction, fills with `style.fillColor ?? black` — a NEW case, does not touch the existing `.blur(...,pixelate:)`); `.emoji(center:CGPoint, string:String, size:Double)` (glyph drawn centered).
+- `AnnotationStyle` additions (defaults preserve M3 behavior): `textOutline: Bool = false`, `textBackgroundColor: RGBAColor? = nil`, `textAlignment: TextAlignment = .left` (new MacShotCore enum `TextAlignment {left,center,right}` — NOT SwiftUI's). Codable; old styles decode with defaults.
+- `AnnotationRenderer.flatten` extensions: `.line` strokes from→to; `.solidCensor` fills opaque; `.emoji` draws the string via CoreText at `center` sized `size`; text draws optional background rect + alignment + optional glyph outline. Headless pixel-tested (line stroke color, solid-censor opaque fill covers base, text-bg color); emoji render is non-crash + size assert only (glyph pixels vary across OS).
+- Emoji source: system emoji picker — the emoji tool places an element then opens the macOS character palette (`NSApp.orderFrontCharacterPalette`) targeting a hidden field; the picked glyph becomes `.emoji`. Default over a bundled sticker set (reversible).
+- Solid-censor default color: black `RGBAColor(0,0,0,1)`.
+- Editor UI: `ToolPalette` gains Line / Solid-censor / Emoji tool buttons + a text-style row (outline toggle, background ColorPicker, alignment segmented control) shown for the text tool; `EditorViewModel.style` carries the new text-style fields.
