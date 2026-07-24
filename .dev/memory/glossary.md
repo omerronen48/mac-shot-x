@@ -38,3 +38,4 @@
 - **BarcodeService / VisionBarcodeService** — protocol + Vision (VNDetectBarcodesRequest) impl; on-device QR/barcode detection in the OCR capture flow.
 - **SettingsBundle** — export/import of user Preferences as flat JSON (MacShotCore); excludes history + secrets.
 - **MenuOrder / CaptureAction** — the user-configurable order of capture actions in the menu-bar menu (MacShotCore, persisted).
+- **Pin-to-Screen** — a captured image floated as an always-on-top borderless window (`PinnedWindow`), draggable/resizable/opacity-adjustable; ephemeral. Distinct from history "pin".
