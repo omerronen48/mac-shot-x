@@ -36,3 +36,5 @@
 - **TextAlignment (MacShotCore)** — left/center/right enum for text annotation layout (not SwiftUI's).
 - **BarcodeObservation** — a decoded QR/barcode: payload + symbology + bounding box (MacShotCore, Vision-free value).
 - **BarcodeService / VisionBarcodeService** — protocol + Vision (VNDetectBarcodesRequest) impl; on-device QR/barcode detection in the OCR capture flow.
+- **SettingsBundle** — export/import of user Preferences as flat JSON (MacShotCore); excludes history + secrets.
+- **MenuOrder / CaptureAction** — the user-configurable order of capture actions in the menu-bar menu (MacShotCore, persisted).
