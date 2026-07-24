@@ -1,4 +1,5 @@
 import Foundation
+import CoreGraphics
 
 public protocol KeyValueStore: AnyObject {
     func string(forKey: String) -> String?
@@ -22,6 +23,7 @@ public struct Preferences {
 
     private func s(_ k: String, _ def: String) -> String { store.string(forKey: k) ?? def }
     private func b(_ k: String, _ def: Bool) -> Bool { (store.object(forKey: k) as? Bool) ?? def }
+    private func d(_ k: String, _ def: Double) -> Double { (store.object(forKey: k) as? Double) ?? def }
 
     public var filenameFormat: String {
         get { s("filenameFormat", "Screenshot {date} at {time}") }
@@ -44,4 +46,50 @@ public struct Preferences {
     public var windowHotkey: String { get { s("hotkey.window", "⌃⌘⇧2") } nonmutating set { store.set(newValue, forKey: "hotkey.window") } }
     public var fullscreenHotkey: String { get { s("hotkey.fullscreen", "⌃⌘⇧3") } nonmutating set { store.set(newValue, forKey: "hotkey.fullscreen") } }
     public var ocrHotkey: String { get { s("hotkey.ocr", "⌃⌘⇧O") } nonmutating set { store.set(newValue, forKey: "hotkey.ocr") } }
+
+    public var captureDelaySeconds: Int {
+        get { (store.object(forKey: "captureDelaySeconds") as? Int) ?? 0 }
+        nonmutating set { store.set(newValue, forKey: "captureDelaySeconds") }
+    }
+    public var captureCursor: Bool {
+        get { b("captureCursor", false) }
+        nonmutating set { store.set(newValue, forKey: "captureCursor") }
+    }
+    public var downscaleRetina: Bool {
+        get { b("downscaleRetina", false) }
+        nonmutating set { store.set(newValue, forKey: "downscaleRetina") }
+    }
+    public var lastAreaRect: CGRect? {
+        get {
+            guard let a = store.object(forKey: "lastAreaRect") as? [Double], a.count == 4 else { return nil }
+            return CGRect(x: a[0], y: a[1], width: a[2], height: a[3])
+        }
+        nonmutating set {
+            if let r = newValue { store.set([Double(r.minX), Double(r.minY), Double(r.width), Double(r.height)], forKey: "lastAreaRect") }
+            else { store.set(nil, forKey: "lastAreaRect") }
+        }
+    }
+    public var lastAreaHotkey: String {
+        get { store.string(forKey: "hotkey.lastArea") ?? "" }
+        nonmutating set { store.set(newValue, forKey: "hotkey.lastArea") }
+    }
+    public var loupeSize: Double {
+        get { d("loupeSize", 120) }
+        nonmutating set { store.set(newValue, forKey: "loupeSize") }
+    }
+    public var loupeMagnification: Double {
+        get { d("loupeMagnification", 8) }
+        nonmutating set { store.set(newValue, forKey: "loupeMagnification") }
+    }
+    public var loupeOutlineEnabled: Bool {
+        get { b("loupeOutlineEnabled", true) }
+        nonmutating set { store.set(newValue, forKey: "loupeOutlineEnabled") }
+    }
+    public var loupeOutlineColor: RGBAColor {
+        get {
+            guard let a = store.object(forKey: "loupeOutlineColor") as? [Double], a.count == 4 else { return .white }
+            return RGBAColor(r: a[0], g: a[1], b: a[2], a: a[3])
+        }
+        nonmutating set { store.set([newValue.r, newValue.g, newValue.b, newValue.a], forKey: "loupeOutlineColor") }
+    }
 }
