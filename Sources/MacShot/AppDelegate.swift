@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var historyWindowController: HistoryWindowController?
     private var overlayController: OverlayController?
     private var ocrCoordinator: OCRCoordinator?
+    private var scrollCoordinator: ScrollCaptureCoordinator?
     private let pinController = PinController()
     private var editorWindows: [EditorWindow] = [] // ponytail: retain open editors
 
@@ -51,6 +52,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             ocr: VisionOCRService(),
             notifier: notifier,
             permission: permissionFlow
+        )
+
+        // ponytail: literal default hotkey — no pref this milestone (YAGNI); CaptureMode.fullscreen used
+        // as the mode slug since CaptureMode has no .scroll case; filename mode string is "scroll".
+        scrollCoordinator = ScrollCaptureCoordinator(
+            capturer: capturer,
+            permission: permissionFlow,
+            present: { @MainActor [weak self] tall in
+                guard let self else { return }
+                var fileURL: URL? = nil
+                var copied = false
+                let sink = SystemSink()
+                if self.prefs.copyToClipboard { sink.copyToClipboard(tall); copied = true }
+                if self.prefs.saveToFile {
+                    let dir = URL(fileURLWithPath: self.prefs.saveDirectoryPath, isDirectory: true)
+                    try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+                    let name = FilenameFormatter(format: self.prefs.filenameFormat)
+                        .uniqueFilename(for: Date(), mode: "scroll") {
+                            FileManager.default.fileExists(atPath: dir.appendingPathComponent($0).path)
+                        }
+                    fileURL = try? sink.writePNG(tall, suggestedName: name, inDirectory: dir)
+                }
+                let result = CaptureResult(
+                    mode: .fullscreen(nil),
+                    image: tall,
+                    fileURL: fileURL,
+                    copiedToClipboard: copied,
+                    size: CGSize(width: tall.width, height: tall.height)
+                )
+                self.overlayController?.present(result)
+            }
         )
 
         overlayController?.onEdit = { [weak self] image in self?.openEditor(for: image) }
@@ -111,6 +143,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for action in prefs.menuOrder.normalized().items {
             menu.addItem(menuItem(for: action))
         }
+        menu.addItem(NSMenuItem(title: "Scrolling Capture", action: #selector(captureScrolling), keyEquivalent: ""))
         menu.addItem(.separator())
         menu.addItem(withTitle: "History…",     action: #selector(openHistory),     keyEquivalent: "")
         menu.addItem(withTitle: "Preferences…", action: #selector(openPreferences), keyEquivalent: "")
@@ -132,6 +165,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func captureWindow()     { runCapture(mode: .window(nil)) }
     @objc private func captureFullscreen() { runCapture(mode: .fullscreen(nil)) }
     @objc private func captureText()       { Task { await ocrCoordinator?.run() } }
+    @objc private func captureScrolling()  { Task { await scrollCoordinator?.run() } }
     @objc private func openHistory()        { historyWindowController?.refresh(); historyWindowController?.show() }
     @objc private func openPreferences()   { prefsWindowController.show() }
     @objc private func quitApp()           { NSApp.terminate(nil) }
@@ -175,6 +209,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let spec = try? HotkeySpec(string: prefs.preferencesHotkey) {
             hotkeyManager.register(spec, id: 6) { [weak self] in
                 self?.openPreferences()
+            }
+        }
+        // id 7: Scrolling Capture — literal default, no pref this milestone (YAGNI).
+        // "S" is kVK_ANSI_S=1 (letter), present in HotkeySpec.keyCodes since M5; parses fine.
+        if let spec = try? HotkeySpec(string: "⌃⌘⇧S") {
+            hotkeyManager.register(spec, id: 7) { [weak self] in
+                Task { await self?.scrollCoordinator?.run() }
             }
         }
     }
