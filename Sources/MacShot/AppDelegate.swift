@@ -143,20 +143,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for action in prefs.menuOrder.normalized().items {
             menu.addItem(menuItem(for: action))
         }
-        menu.addItem(NSMenuItem(title: "Scrolling Capture", action: #selector(captureScrolling), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: String(localized: "Scrolling Capture", bundle: .module), action: #selector(captureScrolling), keyEquivalent: ""))
         menu.addItem(.separator())
-        menu.addItem(withTitle: "History…",     action: #selector(openHistory),     keyEquivalent: "")
-        menu.addItem(withTitle: "Preferences…", action: #selector(openPreferences), keyEquivalent: "")
-        menu.addItem(withTitle: "Quit",         action: #selector(quitApp),          keyEquivalent: "")
+        menu.addItem(withTitle: String(localized: "History…",     bundle: .module), action: #selector(openHistory),     keyEquivalent: "")
+        menu.addItem(withTitle: String(localized: "Preferences…", bundle: .module), action: #selector(openPreferences), keyEquivalent: "")
+        menu.addItem(withTitle: String(localized: "Quit",         bundle: .module), action: #selector(quitApp),          keyEquivalent: "")
         statusItem?.menu = menu
     }
 
     private func menuItem(for action: CaptureAction) -> NSMenuItem {
         switch action {
-        case .area:       return NSMenuItem(title: "Capture Area",       action: #selector(captureArea),       keyEquivalent: "")
-        case .window:     return NSMenuItem(title: "Capture Window",     action: #selector(captureWindow),     keyEquivalent: "")
-        case .fullscreen: return NSMenuItem(title: "Capture Fullscreen", action: #selector(captureFullscreen), keyEquivalent: "")
-        case .ocr:        return NSMenuItem(title: "Capture Text (OCR)", action: #selector(captureText),       keyEquivalent: "")
+        case .area:       return NSMenuItem(title: String(localized: "Capture Area",       bundle: .module), action: #selector(captureArea),       keyEquivalent: "")
+        case .window:     return NSMenuItem(title: String(localized: "Capture Window",     bundle: .module), action: #selector(captureWindow),     keyEquivalent: "")
+        case .fullscreen: return NSMenuItem(title: String(localized: "Capture Fullscreen", bundle: .module), action: #selector(captureFullscreen), keyEquivalent: "")
+        case .ocr:        return NSMenuItem(title: String(localized: "Capture Text (OCR)", bundle: .module), action: #selector(captureText),       keyEquivalent: "")
         case .lastArea:   return NSMenuItem(title: "Capture Last Area",  action: #selector(captureLastArea),   keyEquivalent: "")
         }
     }

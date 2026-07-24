@@ -22,7 +22,7 @@ struct Notifier {
 
     func notifyCaptured(fileURL: URL?, size: CGSize) {
         let content = UNMutableNotificationContent()
-        content.title = "Screenshot saved"
+        content.title = String(localized: "Screenshot saved", bundle: .module)
         content.body = "\(Int(size.width))×\(Int(size.height))"
 
         if let url = fileURL,

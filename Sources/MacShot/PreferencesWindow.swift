@@ -200,7 +200,7 @@ struct PreferencesView: View {
     var body: some View {
         Form {
             // General — export / import settings
-            Section("General") {
+            Section(String(localized: "General", bundle: .module)) {
                 HStack {
                     Button("Export Settings…") { exportSettings() }
                     Button("Import Settings…") { importSettings() }
@@ -208,7 +208,7 @@ struct PreferencesView: View {
             }
 
             // Save directory
-            Section("Save Location") {
+            Section(String(localized: "Save Location", bundle: .module)) {
                 HStack {
                     Text(model.saveDirectoryPath)
                         .truncationMode(.middle)
@@ -220,7 +220,7 @@ struct PreferencesView: View {
             }
 
             // Filename format + live preview
-            Section("Filename Format") {
+            Section(String(localized: "Filename Format", bundle: .module)) {
                 TextField("Format", text: $model.filenameFormat)
                     .onSubmit { model.commitFormat(model.filenameFormat) }
                 Text("Preview: \(filenamePreview)")
@@ -234,11 +234,11 @@ struct PreferencesView: View {
                     .onChange(of: model.copyToClipboard) { _, v in model.commitCopyToClipboard(v) }
                 Toggle("Save to file", isOn: $model.saveToFile)
                     .onChange(of: model.saveToFile) { _, v in model.commitSaveToFile(v) }
-                Toggle("Launch at login", isOn: $model.launchAtLogin)
+                Toggle(String(localized: "Launch at login", bundle: .module), isOn: $model.launchAtLogin)
                     .onChange(of: model.launchAtLogin) { _, v in model.setLaunchAtLogin(v) }
             }
 
-            Section("Updates") {
+            Section(String(localized: "Updates", bundle: .module)) {
                 HStack {
                     Text("MacShot \(UpdateService.currentVersion)")
                         .foregroundStyle(.secondary)
@@ -263,7 +263,7 @@ struct PreferencesView: View {
                 }
             }
 
-            Section("Capture") {
+            Section(String(localized: "Capture", bundle: .module)) {
                 Picker("Capture delay", selection: $model.captureDelaySeconds) {
                     Text("Off").tag(0)
                     Text("3s").tag(3)
@@ -271,7 +271,7 @@ struct PreferencesView: View {
                     Text("10s").tag(10)
                 }
                 .onChange(of: model.captureDelaySeconds) { _, v in model.commitCaptureDelaySeconds(v) }
-                Toggle("Include mouse cursor", isOn: $model.captureCursor)
+                Toggle(String(localized: "Include mouse cursor", bundle: .module), isOn: $model.captureCursor)
                     .onChange(of: model.captureCursor) { _, v in model.commitCaptureCursor(v) }
                 Toggle("Downscale Retina screenshots (~4× smaller)", isOn: $model.downscaleRetina)
                     .onChange(of: model.downscaleRetina) { _, v in model.commitDownscaleRetina(v) }
