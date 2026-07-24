@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var historyWindowController: HistoryWindowController?
     private var overlayController: OverlayController?
     private var ocrCoordinator: OCRCoordinator?
+    private let pinController = PinController()
     private var editorWindows: [EditorWindow] = [] // ponytail: retain open editors
 
     // ponytail: nonisolated(unsafe) lets us call the nonisolated async capture(_:at:) without
@@ -54,10 +55,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         overlayController?.onEdit = { [weak self] image in self?.openEditor(for: image) }
         overlayController?.onHistory = { [weak self] in self?.openHistory() }
+        overlayController?.onPinToScreen = { [weak self] image in self?.pinController.pin(image) }
         historyWindowController?.onEdit = { [weak self] entry in
             guard let self, let src = CGImageSourceCreateWithURL(entry.url as CFURL, nil),
                   let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return }
             self.openEditor(for: img)
+        }
+        historyWindowController?.onPinToScreen = { [weak self] entry in
+            guard let self,
+                  let src = CGImageSourceCreateWithURL(entry.url as CFURL, nil),
+                  let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return }
+            self.pinController.pin(img)
         }
 
         NSApp.setActivationPolicy(.accessory)
