@@ -311,3 +311,8 @@ phase7/review-t6: [auto] SCKScreenCapturer T6 PASS. showsCursor+downscale wired 
 - Emoji source: system emoji picker — the emoji tool places an element then opens the macOS character palette (`NSApp.orderFrontCharacterPalette`) targeting a hidden field; the picked glyph becomes `.emoji`. Default over a bundled sticker set (reversible).
 - Solid-censor default color: black `RGBAColor(0,0,0,1)`.
 - Editor UI: `ToolPalette` gains Line / Solid-censor / Emoji tool buttons + a text-style row (outline toggle, background ColorPicker, alignment segmented control) shown for the text tool; `EditorViewModel.style` carries the new text-style fields.
+
+### phase8/plan — `[auto]`
+- 5 tasks, 3 waves, peak parallelism 2 (W1 kinds‖styles, W2 renderer‖canvas). Plan: docs/plans/2026-07-23-m8-editor-parity.md.
+- Stacks on exec/m7-capture-conveniences-20260723; new branch exec/m8-editor-parity.
+- AnnotationStyle gets a defaulted `init(from:)` (decodeIfPresent) so M3-era serialized styles decode — critical back-compat, explicitly tested.
