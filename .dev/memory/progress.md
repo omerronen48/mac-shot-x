@@ -53,7 +53,7 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 
 | # | Phase | Status | Notes |
 |---|-------|--------|-------|
-| M7 | Capture conveniences | planned | plan: docs/plans/2026-07-23-m7-capture-conveniences.md (9 tasks); off master |
+| M7 | Capture conveniences | done | branch `exec/m7-capture-conveniences-20260723` @ 2a08ad2 (git-verified); 93/93 tests; off main; unmerged |
 | M8 | Editor parity | pending | line tool, solid censor, emoji/sticker, richer text styling |
 | M9 | QR & barcode reading | pending | Vision VNDetectBarcodes beside OCR |
 | M10 | Settings & menu-bar polish | pending | settings export/import, menu order+icon, Sparkle eval |
@@ -68,3 +68,12 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 
 ## Log (v2)
 - 2026-07-23 — v2 roadmap authored (M7–M18) for parity with sw33tLie/macshot v4.2.1. Loop resumes at M7. M7–M11 tractable/parallel-friendly; M12–M17 design-heavy (brainstorm + ESCALATE flagged forks); M18 (i18n) last.
+
+## M7 — Capture conveniences — DONE 2026-07-23 (exec)
+- Branch `exec/m7-capture-conveniences-20260723` @ 2a08ad2, based on `main` (241ee7d — the repo's integration branch; task said "master" but no master ref exists, main has M1–M6+M7 docs). Worktree /Users/omes/macshot-exec-m7-capture-conveniences. NOT merged (human integrates).
+- 9 tasks / 3 waves, all reviews PASS. W1 core (strict TDD): T1 DownscaleTransform, T2 LoupeGeometry, T3 CountdownModel, T4 Preferences (+9 M7 fields). W2 shell (build-gated): T5 CountdownView (AppKit borderless countdown), T6 SCKScreenCapturer (showsCursor + downscale + captureDisplayImage helper), T7 SelectionOverlay loupe (samples cached snapshot only — NO cacheDisplay, grep-verified), T8 PreferencesWindow (Capture+Loupe section). W3: T9 AppDelegate (self-timer via withCheckedContinuation, Capture Last Area via skipOverlay reusing .area(rect), loupe-snapshot wiring, hotkey id 5).
+- W1 and W2 SERIALIZED (single MacShotCore / single MacShot exe compile target races parallel sibling writers); no graphify (Swift unsupported) so file-level overlap only. Peak intended parallelism 4 but executed serial per lessons; reviewers ran in parallel.
+- Final gate: `swift build` clean; `swift test` **93/93** (M1 18 + M2 11 + M3 18 + M4 19 + M5 7 + M6 4 + M7 core 12), 0 failures. MacShotCore stays AppKit-free. Branch integrity git-verified (HEAD==ref, 9 commits chain to 241ee7d, no .dev/memory committed, only the 13 manifest files touched).
+- Deferred to human DoD: manual acceptance (3s self-timer → capture; drag area then Capture Last Area re-captures it; cursor toggle + downscale reflected in output ~4× smaller; loupe magnifies under cursor with no crash + edge clamp). GUI tasks build-gated, no fabricated unit tests by design.
+- Notable: T6 window-mode capture sets showsCursor but does NOT downscale (only fullscreen/area do) — reviewer flagged as ambiguous-non-blocking follow-up. Loupe edge case: drawLoupe returns (no loupe) when cursor within loupeSize/(2·mag) of a snapshot edge (crop fails) — cosmetic follow-up (clamp sampleRect). Both non-blocking.
+- 2026-07-23 — **M7 done.** 9/9 tasks, all reviews PASS. `swift test` 93/93. `swift build` clean. Branch `exec/m7-capture-conveniences-20260723` @ 2a08ad2, based on main (base independently git-verified). 9 `[auto]` decisions. 6 M7 lessons logged (loupe-no-recursion, cursor→pixel Y-flip, click-through Esc global monitor, Timer assumeIsolated, capturer prefs default+nonisolated(unsafe), serialize same-target GUI waves). Unmerged.
