@@ -63,7 +63,7 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 | M14 | Cloud upload & sharing | skipped | dropped by user 2026-07-24 |
 | M15 | Live translation overlay | skipped | dropped by user 2026-07-24 (macOS 15+ dependency) |
 | M16 | AI auto-redact | done | branch `exec/m16-auto-redact-20260723` @ 7e6c117 (git-verified); 134/134; stacks on M11; unmerged |
-| M17 | Scrolling capture | pending | synthetic scroll + stitch |
+| M17 | Scrolling capture | planned | plan: docs/plans/2026-07-23-m17-scrolling-capture.md (3 tasks); stacks on M16 |
 | M18 | Localization (i18n) | pending | String Catalog + starter languages; LAST, depends M7–M17 |
 
 ## Log (v2)

@@ -482,3 +482,7 @@ phase11/execute: [auto] Plan-text nit (both reviewers): plan Step 1 named Histor
 - Stop condition: unchanged-frame (row-signature equality) or 30-frame cap (safety). Reversible.
 - Selection default: window under cursor. Manual capture-each-frame mode NOT built (auto-scroll only, ponytail). Reversible.
 - Scroll step: a fixed lines-per-CGEvent (~½ frame height in lines) with a ~150ms settle delay before capture. Reversible.
+
+### phase17/plan — `[auto]`
+- 3 tasks, 3 waves (T1 ImageStitcher core → T2 ScrollCaptureCoordinator → T3 AppDelegate hotkey). Genuinely sequential; peak parallelism 1. Plan: docs/plans/2026-07-23-m17-scrolling-capture.md.
+- Stacks on exec/m16-auto-redact-20260723; new branch exec/m17-scrolling-capture.
