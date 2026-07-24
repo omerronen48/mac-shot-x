@@ -42,3 +42,5 @@
 - **PIIDetector** — pure MacShotCore logic returning the redaction boxes for OCR observations whose text looks like PII (email/phone/card/long-digits/API-key). Feeds auto-redact solid censors.
 - **ImageStitcher** — pure MacShotCore logic that stitches overlapping scroll frames into one tall image via per-row signature overlap detection.
 - **Scrolling capture** — auto-scroll a window while capturing frames, then stitch into a single tall screenshot (ScrollCaptureCoordinator).
+- **LocalizationAudit** — pure MacShotCore check that finds required keys missing a base or starter-language translation in the .xcstrings catalog (CI guard).
+- **Localizable.xcstrings** — the String Catalog: base English + starter languages (es/fr/de) for a curated key set.
