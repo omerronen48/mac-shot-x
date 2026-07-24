@@ -243,7 +243,7 @@ struct PreferencesView: View {
                     Text("MacShot \(UpdateService.currentVersion)")
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button("Check for Updates…") { UpdateService.checkForUpdates() }
+                    Button(String(localized: "Check for Updates…", bundle: .module)) { UpdateService.checkForUpdates() }
                 }
             }
 

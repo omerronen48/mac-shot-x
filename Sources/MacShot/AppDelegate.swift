@@ -172,7 +172,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func captureLastArea() {
         guard let rect = prefs.lastAreaRect else {
-            notifier.notifyError("No previous area to capture")
+            notifier.notifyError(String(localized: "No previous area to capture", bundle: .module))
             return
         }
         // ponytail: skipOverlay=true — bypasses selection UI, captures stored rect directly
