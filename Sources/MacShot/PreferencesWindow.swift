@@ -17,18 +17,34 @@ final class PreferencesModel: ObservableObject {
     @Published var fullscreenHotkey: String
     @Published var ocrHotkey: String
     @Published var launchAtLogin: Bool
+    @Published var captureDelaySeconds: Int
+    @Published var captureCursor: Bool
+    @Published var downscaleRetina: Bool
+    @Published var lastAreaHotkey: String
+    @Published var loupeSize: Double
+    @Published var loupeMagnification: Double
+    @Published var loupeOutlineEnabled: Bool
+    @Published var loupeOutlineColor: RGBAColor
 
     init() {
         let p = Preferences(store: UserDefaults.standard)
-        saveDirectoryPath = p.saveDirectoryPath
-        filenameFormat    = p.filenameFormat
-        copyToClipboard   = p.copyToClipboard
-        saveToFile        = p.saveToFile
-        areaHotkey        = p.areaHotkey
-        windowHotkey      = p.windowHotkey
-        fullscreenHotkey  = p.fullscreenHotkey
-        ocrHotkey         = p.ocrHotkey
-        launchAtLogin     = LoginItem.isEnabled   // system status is the source of truth
+        saveDirectoryPath    = p.saveDirectoryPath
+        filenameFormat       = p.filenameFormat
+        copyToClipboard      = p.copyToClipboard
+        saveToFile           = p.saveToFile
+        areaHotkey           = p.areaHotkey
+        windowHotkey         = p.windowHotkey
+        fullscreenHotkey     = p.fullscreenHotkey
+        ocrHotkey            = p.ocrHotkey
+        launchAtLogin        = LoginItem.isEnabled   // system status is the source of truth
+        captureDelaySeconds  = p.captureDelaySeconds
+        captureCursor        = p.captureCursor
+        downscaleRetina      = p.downscaleRetina
+        lastAreaHotkey       = p.lastAreaHotkey
+        loupeSize            = p.loupeSize
+        loupeMagnification   = p.loupeMagnification
+        loupeOutlineEnabled  = p.loupeOutlineEnabled
+        loupeOutlineColor    = p.loupeOutlineColor
     }
 
     func setLaunchAtLogin(_ on: Bool) {
@@ -76,6 +92,42 @@ final class PreferencesModel: ObservableObject {
         prefs.ocrHotkey = spec.description   // persist so registerHotkeys() picks it up
         ocrHotkey = spec.description
         onHotkeysChanged?()
+    }
+
+    func commitCaptureDelaySeconds(_ v: Int) {
+        prefs.captureDelaySeconds = v
+        captureDelaySeconds = v
+    }
+
+    func commitCaptureCursor(_ v: Bool) {
+        prefs.captureCursor = v
+    }
+
+    func commitDownscaleRetina(_ v: Bool) {
+        prefs.downscaleRetina = v
+    }
+
+    func recordLastArea(_ spec: HotkeySpec) {
+        prefs.lastAreaHotkey = spec.description
+        lastAreaHotkey = spec.description
+        onHotkeysChanged?()
+    }
+
+    func commitLoupeSize(_ v: Double) {
+        prefs.loupeSize = v
+    }
+
+    func commitLoupeMagnification(_ v: Double) {
+        prefs.loupeMagnification = v
+    }
+
+    func commitLoupeOutlineEnabled(_ v: Bool) {
+        prefs.loupeOutlineEnabled = v
+    }
+
+    func commitLoupeOutlineColor(_ c: RGBAColor) {
+        prefs.loupeOutlineColor = c
+        loupeOutlineColor = c
     }
 }
 
@@ -141,6 +193,49 @@ struct PreferencesView: View {
                 }
                 hotkeyRow(label: "OCR capture") {
                     HotkeyRecorderField(current: model.ocrHotkey) { model.recordOCR($0) }
+                }
+            }
+
+            Section("Capture") {
+                Picker("Capture delay", selection: $model.captureDelaySeconds) {
+                    Text("Off").tag(0)
+                    Text("3s").tag(3)
+                    Text("5s").tag(5)
+                    Text("10s").tag(10)
+                }
+                .onChange(of: model.captureDelaySeconds) { _, v in model.commitCaptureDelaySeconds(v) }
+                Toggle("Include mouse cursor", isOn: $model.captureCursor)
+                    .onChange(of: model.captureCursor) { _, v in model.commitCaptureCursor(v) }
+                Toggle("Downscale Retina screenshots (~4× smaller)", isOn: $model.downscaleRetina)
+                    .onChange(of: model.downscaleRetina) { _, v in model.commitDownscaleRetina(v) }
+                hotkeyRow(label: "Capture Last Area") {
+                    HotkeyRecorderField(current: model.lastAreaHotkey) { model.recordLastArea($0) }
+                }
+
+                Section("Loupe") {
+                    Toggle("Show outline", isOn: $model.loupeOutlineEnabled)
+                        .onChange(of: model.loupeOutlineEnabled) { _, v in model.commitLoupeOutlineEnabled(v) }
+                    Stepper("Size: \(Int(model.loupeSize))px",
+                            value: $model.loupeSize,
+                            in: 80...240, step: 20)
+                        .onChange(of: model.loupeSize) { _, v in model.commitLoupeSize(v) }
+                    Stepper("Magnification: \(Int(model.loupeMagnification))×",
+                            value: $model.loupeMagnification,
+                            in: 2...16, step: 2)
+                        .onChange(of: model.loupeMagnification) { _, v in model.commitLoupeMagnification(v) }
+                    ColorPicker("Outline color", selection: Binding(
+                        get: { Color(red: model.loupeOutlineColor.r,
+                                     green: model.loupeOutlineColor.g,
+                                     blue: model.loupeOutlineColor.b,
+                                     opacity: model.loupeOutlineColor.a) },
+                        set: { c in
+                            let r = NSColor(c).usingColorSpace(.sRGB) ?? .black
+                            model.commitLoupeOutlineColor(RGBAColor(r: r.redComponent,
+                                                                    g: r.greenComponent,
+                                                                    b: r.blueComponent,
+                                                                    a: r.alphaComponent))
+                        }
+                    ))
                 }
             }
         }
