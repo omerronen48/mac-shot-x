@@ -55,6 +55,7 @@ private struct ThumbnailCell: View {
     let onPin: () -> Void
     let onUnpin: () -> Void
     let onEdit: () -> Void
+    let onPinToScreen: () -> Void
 
     @State private var image: NSImage? = nil
 
@@ -82,6 +83,7 @@ private struct ThumbnailCell: View {
         }
         .contextMenu {
             Button("Edit") { onEdit() }
+            Button("Pin to Screen") { onPinToScreen() }
             Button("Copy") { copyToPasteboard(entry.url) }
             Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([entry.url]) }
             Divider()
@@ -116,6 +118,7 @@ struct HistoryGrid: View {
     @ObservedObject var model: HistoryModel
     var onChooseFolder: (() -> Void)?
     var onEdit: ((HistoryEntry) -> Void)?
+    var onPinToScreen: ((HistoryEntry) -> Void)?
 
     private let columns = [GridItem(.adaptive(minimum: 160), spacing: 12)]
     private var pinned: [HistoryEntry] { model.entries.filter(\.isPinned) }
@@ -161,10 +164,11 @@ struct HistoryGrid: View {
     private func cell(_ entry: HistoryEntry) -> some View {
         ThumbnailCell(
             entry: entry,
-            onDelete: { model.delete(entry) },
-            onPin:    { model.pin(entry) },
-            onUnpin:  { model.unpin(entry) },
-            onEdit:   { onEdit?(entry) }
+            onDelete:      { model.delete(entry) },
+            onPin:         { model.pin(entry) },
+            onUnpin:       { model.unpin(entry) },
+            onEdit:        { onEdit?(entry) },
+            onPinToScreen: { onPinToScreen?(entry) }
         )
     }
 
@@ -190,6 +194,8 @@ public final class HistoryWindowController {
     public var onChooseFolder: (() -> Void)?
     /// Optional: called when user taps "Edit" on a history entry.
     public var onEdit: ((HistoryEntry) -> Void)?
+    /// Optional: called when user taps "Pin to Screen" on a history entry.
+    public var onPinToScreen: ((HistoryEntry) -> Void)?
 
     public init(store: HistoryStore) {
         model = HistoryModel(store: store)
@@ -203,7 +209,8 @@ public final class HistoryWindowController {
         }
         let view = HistoryGrid(model: model,
                                onChooseFolder: { [weak self] in self?.onChooseFolder?() },
-                               onEdit: { [weak self] entry in self?.onEdit?(entry) })
+                               onEdit:         { [weak self] entry in self?.onEdit?(entry) },
+                               onPinToScreen:  { [weak self] entry in self?.onPinToScreen?(entry) })
         let host = NSHostingController(rootView: view)
         let win  = NSWindow(contentViewController: host)
         win.title = "Screenshot History"
