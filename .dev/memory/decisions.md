@@ -335,3 +335,8 @@ phase7/review-t6: [auto] SCKScreenCapturer T6 PASS. showsCursor+downscale wired 
 - Mode: NO new hotkey — the existing M5 OCR capture (hotkey + menu) auto-detects BOTH text and barcodes in one pass. Barcode payload takes precedence when present. Reversible.
 - URL handling: copy payload + notification shows it; if the payload looksLikeURL, the notification offers "Open" (user-initiated) — NEVER auto-open (safety). Reversible.
 - Shell: `VisionBarcodeService` (VNDetectBarcodesRequest, on-device) impl of BarcodeService; `OCRCoordinator` extended to run OCR + barcode detection on the captured image, combine via BarcodeResult, write clipboard + notify. Menu item label stays "Capture Text (OCR)" (now also QR); glossary notes it.
+
+### phase9/plan — `[auto]`
+- 4 tasks, 3 waves, peak parallelism 2 (W1 core: Barcode value/protocol ‖ BarcodeResult combine). Plan: docs/plans/2026-07-23-m9-qr-barcode.md.
+- Stacks on exec/m8-editor-parity-20260723; new branch exec/m9-qr-barcode.
+- No new hotkey/menu — barcode detection folds into the M5 OCR capture; barcode payload precedence via BarcodeResult.combinedPayload.

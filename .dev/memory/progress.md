@@ -55,7 +55,7 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 |---|-------|--------|-------|
 | M7 | Capture conveniences | done | branch `exec/m7-capture-conveniences-20260723` @ 2a08ad2 (git-verified); 93/93 tests; off main; unmerged |
 | M8 | Editor parity | done | branch `exec/m8-editor-parity-20260723` @ 8a85ba8 (git-verified); 104/104; stacks on M7; unmerged |
-| M9 | QR & barcode reading | pending | Vision VNDetectBarcodes beside OCR |
+| M9 | QR & barcode reading | planned | plan: docs/plans/2026-07-23-m9-qr-barcode.md (4 tasks); stacks on M8 |
 | M10 | Settings & menu-bar polish | pending | settings export/import, menu order+icon, Sparkle eval |
 | M11 | Pin-to-screen | pending | floating always-on-top pinned shots |
 | M12 | Screen recording (core) | pending | SCStream video, HUD, countdown, MP4/GIF/WebP — brainstorm ESCALATE forks |
