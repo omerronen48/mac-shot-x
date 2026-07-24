@@ -20,6 +20,8 @@ final class EditorViewModel {
     var selection: UUID?
     var beautifyStyle: BeautifyStyle = .none
     let presetStore: PresetStore
+    // ponytail: base stored here so ToolPalette can trigger autoRedact without holding CGImage
+    var autoRedactBase: CGImage?
 
     private(set) var inProgressID: UUID?
     private var dragStart: CGPoint?
@@ -29,6 +31,19 @@ final class EditorViewModel {
         self.document = document
         self.undo = UndoStack(initial: document.annotations)
         self.presetStore = presetStore
+    }
+
+    func autoRedact() async {
+        guard let base = autoRedactBase else { return }
+        guard let obs = try? await VisionOCRService().recognize(base) else { return }
+        let boxes = PIIDetector.detect(obs)
+        guard !boxes.isEmpty else { return }
+        let black = RGBAColor(r: 0, g: 0, b: 0, a: 1)
+        let censorStyle = AnnotationStyle(strokeColor: black, fillColor: black, lineWidth: 0, fontSize: 0)
+        undo.record(current: document.annotations)
+        for box in boxes {
+            document.add(Annotation(kind: .solidCensor(box), style: censorStyle))
+        }
     }
 
     func beginStroke(at point: CGPoint) {
@@ -258,6 +273,7 @@ struct EditorCanvas: View {
                 }
             }
         }
+        .onAppear { vm.autoRedactBase = base }
     }
 
     // MARK: - Coordinate helpers

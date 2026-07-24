@@ -23,6 +23,8 @@ struct ToolPalette: View {
             Divider().frame(height: 20)
             undoRedoButtons
             Divider().frame(height: 20)
+            autoRedactButton
+            Divider().frame(height: 20)
             exportButton
         }
         .padding(.horizontal, 8)
@@ -150,6 +152,19 @@ struct ToolPalette: View {
             .disabled(!vm.undo.canRedo)
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: Auto-Redact
+
+    private var autoRedactButton: some View {
+        Button {
+            Task { await vm.autoRedact() }
+        } label: {
+            Image(systemName: "eye.slash")
+                .frame(width: 24, height: 24)
+        }
+        .buttonStyle(.plain)
+        .help("Auto-Redact sensitive text")
     }
 
     // MARK: Export
