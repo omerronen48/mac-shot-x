@@ -7,7 +7,7 @@ import UniformTypeIdentifiers
 // MARK: - Action enum (T7 references this)
 
 public enum PanelAction {
-    case copy, saveAs, delete, pin, dragStarted, edit, history
+    case copy, saveAs, delete, pin, dragStarted, edit, history, pinToScreen
 }
 
 // MARK: - Public panel
@@ -122,10 +122,11 @@ private final class PanelContentView: NSView {
         let pinBtn    = makeButton("pin",           tip: "Pin",      action: #selector(tapPin))
         let editBtn   = makeButton("pencil.tip.crop.circle", tip: "Edit", action: #selector(tapEdit))
         let histBtn   = makeButton("clock.arrow.circlepath", tip: "History", action: #selector(tapHistory))
+        let pinToScreenBtn = makeButton("pin", tip: "Pin to Screen", action: #selector(tapPinToScreen))
 
         if !hasDisk { deleteBtn.isEnabled = false }  // nothing on disk
 
-        let stack = NSStackView(views: [copyBtn, saveBtn, deleteBtn, pinBtn, editBtn, histBtn])
+        let stack = NSStackView(views: [copyBtn, saveBtn, deleteBtn, pinBtn, editBtn, histBtn, pinToScreenBtn])
         stack.orientation = .horizontal
         stack.spacing = 6
         return stack
@@ -155,6 +156,7 @@ private final class PanelContentView: NSView {
     @objc private func tapPin()    { onAction(.pin) }
     @objc private func tapEdit()   { onAction(.edit) }
     @objc private func tapHistory() { onAction(.history) }
+    @objc private func tapPinToScreen() { onAction(.pinToScreen) }
 }
 
 // MARK: - Draggable image view
