@@ -62,7 +62,7 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 | M13 | Recording overlays & editor | skipped | dropped by user 2026-07-24 (depends on M12) |
 | M14 | Cloud upload & sharing | skipped | dropped by user 2026-07-24 |
 | M15 | Live translation overlay | skipped | dropped by user 2026-07-24 (macOS 15+ dependency) |
-| M16 | AI auto-redact | pending | detect PII → censor; depends M5/M8 |
+| M16 | AI auto-redact | planned | plan: docs/plans/2026-07-23-m16-auto-redact.md (2 tasks); stacks on M11 |
 | M17 | Scrolling capture | pending | synthetic scroll + stitch |
 | M18 | Localization (i18n) | pending | String Catalog + starter languages; LAST, depends M7–M17 |
 

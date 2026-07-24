@@ -452,3 +452,7 @@ phase11/execute: [auto] Plan-text nit (both reviewers): plan Step 1 named Histor
 - Editor **Auto-Redact** button (ToolPalette): runs `VisionOCRService.recognize(base)` → `PIIDetector.detect` → adds a `.solidCensor` annotation (M8) per box. OCR pixel-space boxes align with the annotation/renderer space (both bottom-left origin, M5→M3 convention) — executor verifies the conversion.
 - Review UX: the added `.solidCensor`s are normal editor annotations — user moves/deletes/adds before export. NO separate review UI. Reversible.
 - Regex-over-NSDataDetector chosen for testability; NSDataDetector could be swapped later if recall matters. Reversible.
+
+### phase16/plan — `[auto]`
+- 2 tasks, 2 waves (T1 PIIDetector core → T2 editor Auto-Redact). Genuinely sequential (pure detector → its only consumer); peak parallelism 1. Plan: docs/plans/2026-07-23-m16-auto-redact.md.
+- Stacks on exec/m11-pin-to-screen-20260723; new branch exec/m16-auto-redact.
