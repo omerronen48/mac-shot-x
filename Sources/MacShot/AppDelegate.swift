@@ -61,40 +61,63 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         NSApp.setActivationPolicy(.accessory)
-        buildStatusMenu()
+        applyMenuBarSettings()
 
         if !permissionFlow.hasScreenAccess() {
             permissionFlow.requestScreenAccess()
             permissionFlow.openScreenRecordingSettings()
         }
 
-        registerHotkeys()
-
-        prefsWindowController.onHotkeysChanged = { [weak self] in
-            self?.hotkeyManager.unregisterAll()
-            self?.registerHotkeys()
-        }
+        // onSettingsChanged covers menu rebuild + icon + visibility + hotkeys; onHotkeysChanged
+        // left in place for backward compat but both point at the same full re-apply.
+        prefsWindowController.onSettingsChanged = { [weak self] in self?.applyMenuBarSettings() }
+        prefsWindowController.onHotkeysChanged  = { [weak self] in self?.applyMenuBarSettings() }
     }
 
     // MARK: - Status menu
 
+    // Rebuilds menu, applies custom icon, and applies hide/show — call on launch and on settings change.
+    private func applyMenuBarSettings() {
+        buildStatusMenu()
+        hotkeyManager.unregisterAll()
+        registerHotkeys()
+        if prefs.hideMenuBarIcon {
+            statusItem?.isVisible = false
+        } else {
+            statusItem?.isVisible = true
+            statusItem?.button?.image =
+                NSImage(systemSymbolName: prefs.menuBarIconSymbol, accessibilityDescription: "MacShot")
+                ?? NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "MacShot")
+        }
+    }
+
     private func buildStatusMenu() {
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "camera.on.rectangle", accessibilityDescription: "MacShot")
-        if item.button?.image == nil { item.button?.title = "M" }
+        if statusItem == nil {
+            statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        }
+        let image = NSImage(systemSymbolName: prefs.menuBarIconSymbol, accessibilityDescription: "MacShot")
+            ?? NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "MacShot")
+        statusItem?.button?.image = image
 
         let menu = NSMenu()
-        menu.addItem(withTitle: "Capture Area",       action: #selector(captureArea),       keyEquivalent: "")
-        menu.addItem(withTitle: "Capture Window",     action: #selector(captureWindow),     keyEquivalent: "")
-        menu.addItem(withTitle: "Capture Fullscreen", action: #selector(captureFullscreen), keyEquivalent: "")
-        menu.addItem(withTitle: "Capture Text (OCR)", action: #selector(captureText),       keyEquivalent: "")
-        menu.addItem(withTitle: "Capture Last Area",  action: #selector(captureLastArea),   keyEquivalent: "")
+        for action in prefs.menuOrder.normalized().items {
+            menu.addItem(menuItem(for: action))
+        }
         menu.addItem(.separator())
         menu.addItem(withTitle: "History…",     action: #selector(openHistory),     keyEquivalent: "")
         menu.addItem(withTitle: "Preferences…", action: #selector(openPreferences), keyEquivalent: "")
         menu.addItem(withTitle: "Quit",         action: #selector(quitApp),          keyEquivalent: "")
-        item.menu = menu
-        statusItem = item
+        statusItem?.menu = menu
+    }
+
+    private func menuItem(for action: CaptureAction) -> NSMenuItem {
+        switch action {
+        case .area:       return NSMenuItem(title: "Capture Area",       action: #selector(captureArea),       keyEquivalent: "")
+        case .window:     return NSMenuItem(title: "Capture Window",     action: #selector(captureWindow),     keyEquivalent: "")
+        case .fullscreen: return NSMenuItem(title: "Capture Fullscreen", action: #selector(captureFullscreen), keyEquivalent: "")
+        case .ocr:        return NSMenuItem(title: "Capture Text (OCR)", action: #selector(captureText),       keyEquivalent: "")
+        case .lastArea:   return NSMenuItem(title: "Capture Last Area",  action: #selector(captureLastArea),   keyEquivalent: "")
+        }
     }
 
     @objc private func captureArea()       { runCapture(mode: .area(nil)) }
@@ -137,6 +160,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let spec = try? HotkeySpec(string: prefs.lastAreaHotkey) {
             hotkeyManager.register(spec, id: 5) { [weak self] in
                 self?.captureLastArea()
+            }
+        }
+        // id 6: Preferences hotkey — registered even when menu bar icon is hidden (lockout guard).
+        // ponytail: try? silently no-ops if HotkeySpec can't parse the key (e.g. "," missing from keyCodes).
+        if let spec = try? HotkeySpec(string: prefs.preferencesHotkey) {
+            hotkeyManager.register(spec, id: 6) { [weak self] in
+                self?.openPreferences()
             }
         }
     }
