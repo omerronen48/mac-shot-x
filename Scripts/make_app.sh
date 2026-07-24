@@ -12,7 +12,7 @@ swift build -c release --arch arm64 --arch x86_64
 BIN_DIR="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)"
 BINARY="$BIN_DIR/MacShot"
 
-APP="$REPO_ROOT/MacShot.app"
+APP="$REPO_ROOT/mac-shot-X.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
@@ -45,4 +45,4 @@ fi
 
 echo ""
 echo "Built: $APP"
-echo "Drag MacShot.app to /Applications to install."
+echo "Drag mac-shot-X.app to /Applications to install."

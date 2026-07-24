@@ -17,17 +17,17 @@ mkdir -p "$MOUNT"
 hdiutil attach "$DMG" -nobrowse -quiet -mountpoint "$MOUNT"
 
 echo "Installing to /Applications…"
-rm -rf "/Applications/MacShot.app"
-cp -R "$MOUNT/MacShot.app" "/Applications/"
+rm -rf "/Applications/mac-shot-X.app"
+cp -R "$MOUNT/mac-shot-X.app" "/Applications/"
 
 hdiutil detach "$MOUNT" -quiet || true
 rm -rf "$TMP"
 
 # Not notarized → clear the quarantine flag so it opens without a right-click dance.
-xattr -dr com.apple.quarantine "/Applications/MacShot.app" 2>/dev/null || true
+xattr -dr com.apple.quarantine "/Applications/mac-shot-X.app" 2>/dev/null || true
 
 echo "Launching MacShot…"
-open "/Applications/MacShot.app"
+open "/Applications/mac-shot-X.app"
 
 echo ""
 echo "Installed. Grant Screen Recording when prompted (System Settings → Privacy &"

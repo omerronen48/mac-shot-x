@@ -118,13 +118,13 @@ private final class PanelContentView: NSView {
         let saveBtn   = makeButton(hasDisk ? "folder" : "square.and.arrow.down",
                                    tip: hasDisk ? "Reveal in Finder" : "Save As…",
                                    action: #selector(tapSave))
-        let deleteBtn = makeButton("trash",        tip: "Delete",   action: #selector(tapDelete))
+        // Trash is ALWAYS enabled: delete the file if there is one, else just dismiss/discard
+        // the (clipboard-only) panel. A grayed trash after every capture is confusing.
+        let deleteBtn = makeButton("trash",        tip: hasDisk ? "Delete" : "Dismiss", action: #selector(tapDelete))
         let pinBtn    = makeButton("pin",           tip: "Pin",      action: #selector(tapPin))
         let editBtn   = makeButton("pencil.tip.crop.circle", tip: "Edit", action: #selector(tapEdit))
         let histBtn   = makeButton("clock.arrow.circlepath", tip: "History", action: #selector(tapHistory))
         let pinToScreenBtn = makeButton("pin", tip: "Pin to Screen", action: #selector(tapPinToScreen))
-
-        if !hasDisk { deleteBtn.isEnabled = false }  // nothing on disk
 
         let stack = NSStackView(views: [copyBtn, saveBtn, deleteBtn, pinBtn, editBtn, histBtn, pinToScreenBtn])
         stack.orientation = .horizontal

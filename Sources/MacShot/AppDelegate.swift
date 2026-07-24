@@ -126,8 +126,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             statusItem?.isVisible = true
             statusItem?.button?.image =
-                NSImage(systemSymbolName: prefs.menuBarIconSymbol, accessibilityDescription: "MacShot")
-                ?? NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "MacShot")
+                NSImage(systemSymbolName: prefs.menuBarIconSymbol, accessibilityDescription: "mac-shot-X")
+                ?? NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "mac-shot-X")
         }
     }
 
@@ -135,8 +135,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if statusItem == nil {
             statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         }
-        let image = NSImage(systemSymbolName: prefs.menuBarIconSymbol, accessibilityDescription: "MacShot")
-            ?? NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "MacShot")
+        let image = NSImage(systemSymbolName: prefs.menuBarIconSymbol, accessibilityDescription: "mac-shot-X")
+            ?? NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "mac-shot-X")
         statusItem?.button?.image = image
 
         let menu = NSMenu()

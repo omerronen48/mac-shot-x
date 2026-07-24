@@ -66,7 +66,7 @@ Assemble the app bundle (ad-hoc signed, for local use):
 bash Scripts/make_app.sh
 ```
 
-This produces `MacShot.app`. Copy it to `/Applications` or run it in place.
+This produces `mac-shot-X.app`. Copy it to `/Applications` or run it in place.
 
 ## Install — Notarized Build (Signed for Distribution)
 

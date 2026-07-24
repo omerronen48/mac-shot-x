@@ -12,7 +12,7 @@ cask "macshot" do
 
   depends_on macos: ">= :sonoma"
 
-  app "MacShot.app"
+  app "mac-shot-X.app"
 
   # MacShot needs Screen Recording permission; grant it on first capture.
   caveats <<~EOS
