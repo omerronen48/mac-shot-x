@@ -53,7 +53,7 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 
 | # | Phase | Status | Notes |
 |---|-------|--------|-------|
-| M7 | Capture conveniences | pending | self-timer/countdown, capture-last-area, capture-cursor, downscale-Retina, correct loupe |
+| M7 | Capture conveniences | planned | plan: docs/plans/2026-07-23-m7-capture-conveniences.md (9 tasks); off master |
 | M8 | Editor parity | pending | line tool, solid censor, emoji/sticker, richer text styling |
 | M9 | QR & barcode reading | pending | Vision VNDetectBarcodes beside OCR |
 | M10 | Settings & menu-bar polish | pending | settings export/import, menu order+icon, Sparkle eval |
