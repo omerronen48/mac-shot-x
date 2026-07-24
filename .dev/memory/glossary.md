@@ -40,3 +40,5 @@
 - **MenuOrder / CaptureAction** — the user-configurable order of capture actions in the menu-bar menu (MacShotCore, persisted).
 - **Pin-to-Screen** — a captured image floated as an always-on-top borderless window (`PinnedWindow`), draggable/resizable/opacity-adjustable; ephemeral. Distinct from history "pin".
 - **PIIDetector** — pure MacShotCore logic returning the redaction boxes for OCR observations whose text looks like PII (email/phone/card/long-digits/API-key). Feeds auto-redact solid censors.
+- **ImageStitcher** — pure MacShotCore logic that stitches overlapping scroll frames into one tall image via per-row signature overlap detection.
+- **Scrolling capture** — auto-scroll a window while capturing frames, then stitch into a single tall screenshot (ScrollCaptureCoordinator).

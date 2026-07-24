@@ -472,3 +472,13 @@ phase11/execute: [auto] Plan-text nit (both reviewers): plan Step 1 named Histor
 - phase16/execute: [auto] T2 no toast built for empty/failed OCR (no existing status mechanism to reuse) — silent no-op per ponytail.
 - phase16/execute: [auto] T2 black censor style = AnnotationStyle with fillColor+strokeColor both RGBAColor(r:0,g:0,b:0,a:1); undo recorded once before the batch of boxes (single-action batch-undo semantics).
 - phase16/execute: [auto] eye.slash added as a plain action Button in ToolPalette, NOT a new Tool enum case (action vs mode).
+
+## v2 — M17 (Scrolling capture)
+
+### phase17/brainstorm — all `[auto]`, reversible
+- MacShotCore `ImageStitcher` (pure, TDD): `rowSignatures(_ image:CGImage) -> [UInt64]` (per-row hash of pixels); `overlap(_ a:[UInt64], _ b:[UInt64]) -> Int` (largest k where a.suffix(k) == b.prefix(k)); `stitch(_ frames:[CGImage]) -> CGImage?` (composite frames top→bottom, appending only the non-overlapping rows of each next frame). The overlap array logic + a synthetic-image stitch are fully headless-testable.
+- Shell `ScrollCaptureCoordinator`: pick the window under the cursor (default; reuse M1 window selection) → loop {capture frame via SCKScreenCapturer; post a synthetic scroll-down CGEvent (fixed lines); wait a short settle delay}; stop when the new frame == previous (bottom reached) OR a max cap of 30 frames; `ImageStitcher.stitch(frames)` → present result (overlay + save via existing pipeline).
+- New "Scrolling Capture" hotkey (default `⌃⌘⇧S`) + menu item.
+- Stop condition: unchanged-frame (row-signature equality) or 30-frame cap (safety). Reversible.
+- Selection default: window under cursor. Manual capture-each-frame mode NOT built (auto-scroll only, ponytail). Reversible.
+- Scroll step: a fixed lines-per-CGEvent (~½ frame height in lines) with a ~150ms settle delay before capture. Reversible.
