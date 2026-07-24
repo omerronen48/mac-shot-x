@@ -444,3 +444,11 @@ phase11/execute: [auto] Plan-text nit (both reviewers): plan Step 1 named Histor
 
 ## v2 — remaining scope locked (2026-07-24)
 - `[escalated]` user picks: BUILD M16 (auto-redact), M17 (scrolling capture), M18 (localization). SKIP M14 (cloud upload) + M15 (translation, macOS-15 dependency). Order: M16 → M17 → M18 (i18n last, cross-cutting). Each stacks on the previous built branch (M16 on M11).
+
+## v2 — M16 (AI auto-redact)
+
+### phase16/brainstorm — all `[auto]`, reversible
+- MacShotCore `PIIDetector` (pure, TDD): `detect(_ observations:[OCRObservation]) -> [CGRect]` — returns the boundingBox of each observation whose text matches any PII class. Classes via **regex** (deterministic, no NSDataDetector locale flakiness): email `[\w.%+-]+@[\w.-]+\.[A-Za-z]{2,}`; phone (loose 8+ digits with separators); credit-card 13–19 digits (optional space/dash); long-digit run 9+ digits; API-key-like 20+ char alnum token containing BOTH a letter and a digit. An observation matches if ANY class matches; one box per matched observation.
+- Editor **Auto-Redact** button (ToolPalette): runs `VisionOCRService.recognize(base)` → `PIIDetector.detect` → adds a `.solidCensor` annotation (M8) per box. OCR pixel-space boxes align with the annotation/renderer space (both bottom-left origin, M5→M3 convention) — executor verifies the conversion.
+- Review UX: the added `.solidCensor`s are normal editor annotations — user moves/deletes/adds before export. NO separate review UI. Reversible.
+- Regex-over-NSDataDetector chosen for testability; NSDataDetector could be swapped later if recall matters. Reversible.
