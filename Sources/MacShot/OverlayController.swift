@@ -20,6 +20,7 @@ public final class OverlayController {
     /// Set by AppDelegate to open the annotation editor for a captured image.
     public var onEdit: ((CGImage) -> Void)?
     public var onHistory: (() -> Void)?
+    public var onPinToScreen: ((CGImage) -> Void)?
 
     public init(historyStore: HistoryStore) {
         self.historyStore = historyStore
@@ -151,6 +152,8 @@ public final class OverlayController {
             onEdit?(result.image)
         case .history:
             onHistory?()
+        case .pinToScreen:
+            onPinToScreen?(result.image)
         }
     }
 }

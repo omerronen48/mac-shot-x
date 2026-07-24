@@ -3,12 +3,14 @@ import PackageDescription
 
 let package = Package(
     name: "MacShot",
+    defaultLocalization: "en",
     platforms: [.macOS(.v14)],
     targets: [
         .target(name: "MacShotCore"),
         .executableTarget(
             name: "MacShot",
-            dependencies: ["MacShotCore"]
+            dependencies: ["MacShotCore"],
+            resources: [.process("Localizable.xcstrings")]
         ),
         .testTarget(
             name: "MacShotCoreTests",

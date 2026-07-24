@@ -16,4 +16,8 @@ public struct CaptureResult: @unchecked Sendable {   // CGImage is immutable/thr
     public let fileURL: URL?
     public let copiedToClipboard: Bool
     public let size: CGSize
+    public init(mode: CaptureMode, image: CGImage, fileURL: URL?, copiedToClipboard: Bool, size: CGSize) {
+        self.mode = mode; self.image = image; self.fileURL = fileURL
+        self.copiedToClipboard = copiedToClipboard; self.size = size
+    }
 }

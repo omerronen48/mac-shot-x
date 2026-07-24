@@ -6,9 +6,11 @@ import ScreenCaptureKit
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
-    private let prefs = Preferences(store: UserDefaults.standard)
+    // ponytail: single shared Preferences instance; capturer uses the same object so
+    // cursor/downscale prefs are always in sync.
+    private let prefs: Preferences
     private let sink = SystemSink()
-    private let capturer = SCKScreenCapturer()
+    private let capturer: SCKScreenCapturer
     private let notifier = Notifier()
     private let hotkeyManager = HotkeyManager()
     private let permissionFlow = PermissionFlow()
@@ -17,6 +19,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var historyWindowController: HistoryWindowController?
     private var overlayController: OverlayController?
     private var ocrCoordinator: OCRCoordinator?
+    private var scrollCoordinator: ScrollCaptureCoordinator?
+    private let pinController = PinController()
     private var editorWindows: [EditorWindow] = [] // ponytail: retain open editors
 
     // ponytail: nonisolated(unsafe) lets us call the nonisolated async capture(_:at:) without
@@ -26,6 +30,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     nonisolated(unsafe) private var engine: CaptureEngine!
 
     private var statusItem: NSStatusItem?
+
+    override init() {
+        let p = Preferences(store: UserDefaults.standard)
+        prefs = p
+        capturer = SCKScreenCapturer(prefs: p)
+        super.init()
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         engine = CaptureEngine(capturer: capturer, sink: sink, preferences: prefs)
@@ -43,57 +54,130 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             permission: permissionFlow
         )
 
+        // ponytail: literal default hotkey — no pref this milestone (YAGNI); CaptureMode.fullscreen used
+        // as the mode slug since CaptureMode has no .scroll case; filename mode string is "scroll".
+        scrollCoordinator = ScrollCaptureCoordinator(
+            capturer: capturer,
+            permission: permissionFlow,
+            present: { @MainActor [weak self] tall in
+                guard let self else { return }
+                var fileURL: URL? = nil
+                var copied = false
+                let sink = SystemSink()
+                if self.prefs.copyToClipboard { sink.copyToClipboard(tall); copied = true }
+                if self.prefs.saveToFile {
+                    let dir = URL(fileURLWithPath: self.prefs.saveDirectoryPath, isDirectory: true)
+                    try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+                    let name = FilenameFormatter(format: self.prefs.filenameFormat)
+                        .uniqueFilename(for: Date(), mode: "scroll") {
+                            FileManager.default.fileExists(atPath: dir.appendingPathComponent($0).path)
+                        }
+                    fileURL = try? sink.writePNG(tall, suggestedName: name, inDirectory: dir)
+                }
+                let result = CaptureResult(
+                    mode: .fullscreen(nil),
+                    image: tall,
+                    fileURL: fileURL,
+                    copiedToClipboard: copied,
+                    size: CGSize(width: tall.width, height: tall.height)
+                )
+                self.overlayController?.present(result)
+            }
+        )
+
         overlayController?.onEdit = { [weak self] image in self?.openEditor(for: image) }
         overlayController?.onHistory = { [weak self] in self?.openHistory() }
+        overlayController?.onPinToScreen = { [weak self] image in self?.pinController.pin(image) }
         historyWindowController?.onEdit = { [weak self] entry in
             guard let self, let src = CGImageSourceCreateWithURL(entry.url as CFURL, nil),
                   let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return }
             self.openEditor(for: img)
         }
+        historyWindowController?.onPinToScreen = { [weak self] entry in
+            guard let self,
+                  let src = CGImageSourceCreateWithURL(entry.url as CFURL, nil),
+                  let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return }
+            self.pinController.pin(img)
+        }
 
         NSApp.setActivationPolicy(.accessory)
-        buildStatusMenu()
+        applyMenuBarSettings()
 
         if !permissionFlow.hasScreenAccess() {
             permissionFlow.requestScreenAccess()
             permissionFlow.openScreenRecordingSettings()
         }
 
-        registerHotkeys()
-
-        prefsWindowController.onHotkeysChanged = { [weak self] in
-            self?.hotkeyManager.unregisterAll()
-            self?.registerHotkeys()
-        }
+        // onSettingsChanged covers menu rebuild + icon + visibility + hotkeys; onHotkeysChanged
+        // left in place for backward compat but both point at the same full re-apply.
+        prefsWindowController.onSettingsChanged = { [weak self] in self?.applyMenuBarSettings() }
+        prefsWindowController.onHotkeysChanged  = { [weak self] in self?.applyMenuBarSettings() }
     }
 
     // MARK: - Status menu
 
+    // Rebuilds menu, applies custom icon, and applies hide/show — call on launch and on settings change.
+    private func applyMenuBarSettings() {
+        buildStatusMenu()
+        hotkeyManager.unregisterAll()
+        registerHotkeys()
+        if prefs.hideMenuBarIcon {
+            statusItem?.isVisible = false
+        } else {
+            statusItem?.isVisible = true
+            statusItem?.button?.image =
+                NSImage(systemSymbolName: prefs.menuBarIconSymbol, accessibilityDescription: "MacShot")
+                ?? NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "MacShot")
+        }
+    }
+
     private func buildStatusMenu() {
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "camera.on.rectangle", accessibilityDescription: "MacShot")
-        if item.button?.image == nil { item.button?.title = "M" }
+        if statusItem == nil {
+            statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        }
+        let image = NSImage(systemSymbolName: prefs.menuBarIconSymbol, accessibilityDescription: "MacShot")
+            ?? NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "MacShot")
+        statusItem?.button?.image = image
 
         let menu = NSMenu()
-        menu.addItem(withTitle: "Capture Area",       action: #selector(captureArea),       keyEquivalent: "")
-        menu.addItem(withTitle: "Capture Window",     action: #selector(captureWindow),     keyEquivalent: "")
-        menu.addItem(withTitle: "Capture Fullscreen", action: #selector(captureFullscreen), keyEquivalent: "")
-        menu.addItem(withTitle: "Capture Text (OCR)", action: #selector(captureText),       keyEquivalent: "")
+        for action in prefs.menuOrder.normalized().items {
+            menu.addItem(menuItem(for: action))
+        }
+        menu.addItem(NSMenuItem(title: String(localized: "Scrolling Capture", bundle: .module), action: #selector(captureScrolling), keyEquivalent: ""))
         menu.addItem(.separator())
-        menu.addItem(withTitle: "History…",     action: #selector(openHistory),     keyEquivalent: "")
-        menu.addItem(withTitle: "Preferences…", action: #selector(openPreferences), keyEquivalent: "")
-        menu.addItem(withTitle: "Quit",         action: #selector(quitApp),          keyEquivalent: "")
-        item.menu = menu
-        statusItem = item
+        menu.addItem(withTitle: String(localized: "History…",     bundle: .module), action: #selector(openHistory),     keyEquivalent: "")
+        menu.addItem(withTitle: String(localized: "Preferences…", bundle: .module), action: #selector(openPreferences), keyEquivalent: "")
+        menu.addItem(withTitle: String(localized: "Quit",         bundle: .module), action: #selector(quitApp),          keyEquivalent: "")
+        statusItem?.menu = menu
+    }
+
+    private func menuItem(for action: CaptureAction) -> NSMenuItem {
+        switch action {
+        case .area:       return NSMenuItem(title: String(localized: "Capture Area",       bundle: .module), action: #selector(captureArea),       keyEquivalent: "")
+        case .window:     return NSMenuItem(title: String(localized: "Capture Window",     bundle: .module), action: #selector(captureWindow),     keyEquivalent: "")
+        case .fullscreen: return NSMenuItem(title: String(localized: "Capture Fullscreen", bundle: .module), action: #selector(captureFullscreen), keyEquivalent: "")
+        case .ocr:        return NSMenuItem(title: String(localized: "Capture Text (OCR)", bundle: .module), action: #selector(captureText),       keyEquivalent: "")
+        case .lastArea:   return NSMenuItem(title: "Capture Last Area",  action: #selector(captureLastArea),   keyEquivalent: "")
+        }
     }
 
     @objc private func captureArea()       { runCapture(mode: .area(nil)) }
     @objc private func captureWindow()     { runCapture(mode: .window(nil)) }
     @objc private func captureFullscreen() { runCapture(mode: .fullscreen(nil)) }
     @objc private func captureText()       { Task { await ocrCoordinator?.run() } }
+    @objc private func captureScrolling()  { Task { await scrollCoordinator?.run() } }
     @objc private func openHistory()        { historyWindowController?.refresh(); historyWindowController?.show() }
     @objc private func openPreferences()   { prefsWindowController.show() }
     @objc private func quitApp()           { NSApp.terminate(nil) }
+
+    @objc private func captureLastArea() {
+        guard let rect = prefs.lastAreaRect else {
+            notifier.notifyError(String(localized: "No previous area to capture", bundle: .module))
+            return
+        }
+        // ponytail: skipOverlay=true — bypasses selection UI, captures stored rect directly
+        runCapture(mode: .area(rect), skipOverlay: true)
+    }
 
     // MARK: - Hotkey registration
 
@@ -114,16 +198,59 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 Task { await self?.ocrCoordinator?.run() }
             }
         }
+        // id 5: Capture Last Area hotkey; included in unregisterAll via hotkeyManager
+        if let spec = try? HotkeySpec(string: prefs.lastAreaHotkey) {
+            hotkeyManager.register(spec, id: 5) { [weak self] in
+                self?.captureLastArea()
+            }
+        }
+        // id 6: Preferences hotkey — registered even when menu bar icon is hidden (lockout guard).
+        // ponytail: try? silently no-ops if HotkeySpec can't parse the key (e.g. "," missing from keyCodes).
+        if let spec = try? HotkeySpec(string: prefs.preferencesHotkey) {
+            hotkeyManager.register(spec, id: 6) { [weak self] in
+                self?.openPreferences()
+            }
+        }
+        // id 7: Scrolling Capture — literal default, no pref this milestone (YAGNI).
+        // "S" is kVK_ANSI_S=1 (letter), present in HotkeySpec.keyCodes since M5; parses fine.
+        if let spec = try? HotkeySpec(string: "⌃⌘⇧S") {
+            hotkeyManager.register(spec, id: 7) { [weak self] in
+                Task { await self?.scrollCoordinator?.run() }
+            }
+        }
     }
 
     // MARK: - Capture flow
 
-    private func runCapture(mode: CaptureMode) {
+    // ponytail: skipOverlay=true used by Capture Last Area to bypass selection UI
+    private func runCapture(mode: CaptureMode, skipOverlay: Bool = false) {
         Task { @MainActor in
+            // Self-timer: if delay > 0, show countdown; cancel aborts the capture
+            let delay = prefs.captureDelaySeconds
+            if delay > 0 {
+                // ponytail: withCheckedContinuation bridges the completion callbacks to async/await.
+                // Both onFinish/onCancel run on the main actor (CountdownView is @MainActor).
+                // Bool=true means countdown expired (proceed); false means Esc (abort).
+                let proceeded = await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
+                    CountdownView().present(
+                        seconds: delay,
+                        onFinish: { cont.resume(returning: true) },
+                        onCancel:  { cont.resume(returning: false) }
+                    )
+                }
+                guard proceeded else { return }
+            }
+
             let resolvedMode: CaptureMode
-            if mode.needsSelectionUI {
+            if !skipOverlay && mode.needsSelectionUI {
+                // Take loupe snapshot before presenting overlay
+                let snap = try? await capturer.captureDisplayImage()
                 let windowList = (try? await fetchWindowList()) ?? []
-                guard let m = await presentOverlay(mode: mode, windows: windowList) else { return }
+                guard let m = await presentOverlay(mode: mode, windows: windowList, screenshot: snap) else { return }
+                // Persist confirmed area rect for Capture Last Area
+                if case .area(let rect) = m, let rect {
+                    prefs.lastAreaRect = rect
+                }
                 resolvedMode = m
             } else {
                 resolvedMode = mode
@@ -161,9 +288,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // ponytail: bridge completion-handler API to async via continuation
-    private func presentOverlay(mode: CaptureMode, windows: [(CGWindowID, CGRect)]) async -> CaptureMode? {
+    private func presentOverlay(mode: CaptureMode, windows: [(CGWindowID, CGRect)], screenshot: CGImage? = nil) async -> CaptureMode? {
         await withCheckedContinuation { continuation in
-            overlay.present(mode: mode, windows: windows) { result in
+            overlay.present(mode: mode, windows: windows, screenshot: screenshot, preferences: prefs) { result in
                 continuation.resume(returning: result)
             }
         }

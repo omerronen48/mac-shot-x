@@ -16,8 +16,14 @@ struct ToolPalette: View {
                 Text("\(Int(vm.style.lineWidth))pt")
                     .frame(width: 36, alignment: .trailing)
             }
+            if vm.activeTool == .text {
+                Divider().frame(height: 20)
+                textStyleRow
+            }
             Divider().frame(height: 20)
             undoRedoButtons
+            Divider().frame(height: 20)
+            autoRedactButton
             Divider().frame(height: 20)
             exportButton
         }
@@ -39,6 +45,9 @@ struct ToolPalette: View {
             (.highlighter, "highlighter",           "h"),
             (.blur,        "drop",                  "b"),
             (.step,        "number.circle",         "s"),
+            (.line,        "line.diagonal",         "l"),
+            (.solidCensor, "rectangle.fill",        "k"),
+            (.emoji,       "face.smiling",          "e"),
         ]
         return ForEach(items, id: \.0.rawValue) { (tool, symbol, _) in
             Button {
@@ -78,6 +87,56 @@ struct ToolPalette: View {
             .frame(width: 28)
     }
 
+    // MARK: Text style row (shown only when .text tool is active)
+
+    private var textStyleRow: some View {
+        let bgBinding = Binding<Color>(
+            get: {
+                guard let c = vm.style.textBackgroundColor else { return .clear }
+                return Color(.sRGB, red: c.r, green: c.g, blue: c.b, opacity: c.a)
+            },
+            set: { newColor in
+                if let ns = NSColor(newColor).usingColorSpace(.sRGB) {
+                    vm.style.textBackgroundColor = RGBAColor(
+                        r: Double(ns.redComponent),
+                        g: Double(ns.greenComponent),
+                        b: Double(ns.blueComponent),
+                        a: Double(ns.alphaComponent)
+                    )
+                }
+            }
+        )
+        return Group {
+            Toggle(isOn: $vm.style.textOutline) {
+                Image(systemName: "a.square")
+            }
+            .toggleStyle(.button)
+            .help("Outline")
+
+            ColorPicker("", selection: bgBinding)
+                .labelsHidden()
+                .frame(width: 28)
+                .help("Text background")
+
+            Button {
+                vm.style.textBackgroundColor = nil
+            } label: {
+                Image(systemName: "xmark.circle")
+            }
+            .buttonStyle(.plain)
+            .help("Clear text background")
+
+            Picker("", selection: $vm.style.textAlignment) {
+                Image(systemName: "text.alignleft").tag(MacShotCore.TextAlignment.left)
+                Image(systemName: "text.aligncenter").tag(MacShotCore.TextAlignment.center)
+                Image(systemName: "text.alignright").tag(MacShotCore.TextAlignment.right)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 90)
+            .labelsHidden()
+        }
+    }
+
     // MARK: Undo / Redo
 
     private var undoRedoButtons: some View {
@@ -93,6 +152,19 @@ struct ToolPalette: View {
             .disabled(!vm.undo.canRedo)
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: Auto-Redact
+
+    private var autoRedactButton: some View {
+        Button {
+            Task { await vm.autoRedact() }
+        } label: {
+            Image(systemName: "eye.slash")
+                .frame(width: 24, height: 24)
+        }
+        .buttonStyle(.plain)
+        .help("Auto-Redact sensitive text")
     }
 
     // MARK: Export
@@ -130,6 +202,9 @@ struct ToolPalette: View {
         Button("") { vm.activeTool = .highlighter } .keyboardShortcut("h", modifiers: []).hidden()
         Button("") { vm.activeTool = .blur }        .keyboardShortcut("b", modifiers: []).hidden()
         Button("") { vm.activeTool = .step }        .keyboardShortcut("s", modifiers: []).hidden()
+        Button("") { vm.activeTool = .line }        .keyboardShortcut("l", modifiers: []).hidden()
+        Button("") { vm.activeTool = .solidCensor } .keyboardShortcut("k", modifiers: []).hidden()
+        Button("") { vm.activeTool = .emoji }       .keyboardShortcut("e", modifiers: []).hidden()
     }
 }
 
@@ -151,6 +226,9 @@ extension Tool: Hashable, RawRepresentable {
         case .highlighter: return 5
         case .blur:        return 6
         case .step:        return 7
+        case .line:        return 8
+        case .solidCensor: return 9
+        case .emoji:       return 10
         }
     }
 }
