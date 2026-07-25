@@ -4,7 +4,9 @@ import Foundation
 /// allow-list of keys; excludes screenshot history and any secret keys.
 public enum SettingsBundle {
     public static let exportableKeys: [String] = [
-        "filenameFormat", "saveDirectoryPath", "copyToClipboard", "saveToFile",
+        // saveDirectoryPath intentionally excluded — machine-specific; importing it would
+        // silently repoint where screenshots are written on the target machine.
+        "filenameFormat", "copyToClipboard", "saveToFile",
         "hotkey.area", "hotkey.window", "hotkey.fullscreen", "hotkey.ocr", "hotkey.lastArea",
         "captureDelaySeconds", "captureCursor", "downscaleRetina",
         "loupeSize", "loupeMagnification", "loupeOutlineEnabled", "loupeOutlineColor",

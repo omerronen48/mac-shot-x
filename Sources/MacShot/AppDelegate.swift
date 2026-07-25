@@ -67,12 +67,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 if self.prefs.copyToClipboard { sink.copyToClipboard(tall); copied = true }
                 if self.prefs.saveToFile {
                     let dir = URL(fileURLWithPath: self.prefs.saveDirectoryPath, isDirectory: true)
-                    try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
                     let name = FilenameFormatter(format: self.prefs.filenameFormat)
                         .uniqueFilename(for: Date(), mode: "scroll") {
                             FileManager.default.fileExists(atPath: dir.appendingPathComponent($0).path)
                         }
-                    fileURL = try? sink.writePNG(tall, suggestedName: name, inDirectory: dir)
+                    do {
+                        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+                        fileURL = try sink.writePNG(tall, suggestedName: name, inDirectory: dir)
+                    } catch {
+                        // Don't claim success on a failed save (e.g. unwritable/unmounted folder).
+                        self.notifier.notifyError("Couldn’t save the scrolling capture — check your save folder. It was copied to the clipboard.")
+                    }
                 }
                 let result = CaptureResult(
                     mode: .fullscreen(nil),
@@ -297,7 +302,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func openEditor(for image: CGImage) {
-        // ponytail: init shows the window; retain so it isn't released
-        editorWindows.append(EditorWindow(base: image, sink: sink, preferences: prefs))
+        // Retain while open; drop on close so editors don't accumulate for the app's lifetime.
+        let editor = EditorWindow(base: image, sink: sink, preferences: prefs)
+        editorWindows.append(editor)
+        editor.onClose = { [weak self, weak editor] in
+            self?.editorWindows.removeAll { $0 === editor }
+        }
     }
 }

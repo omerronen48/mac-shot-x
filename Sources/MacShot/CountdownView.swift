@@ -37,6 +37,7 @@ private final class CountdownWindow: NSWindow {
     private var timer: Timer?
     private let onFinish: () -> Void
     private let onCancel: () -> Void
+    private var dismissed = false   // guard against the final-tick + Esc double-fire
 
     init(seconds: Int, onFinish: @escaping () -> Void, onCancel: @escaping () -> Void) {
         self.model = CountdownModel(seconds: seconds)
@@ -44,9 +45,9 @@ private final class CountdownWindow: NSWindow {
         self.onCancel = onCancel
 
         let size: CGFloat = 200
-        let screen = NSScreen.main ?? NSScreen.screens[0]
-        let cx = screen.frame.midX - size / 2
-        let cy = screen.frame.midY - size / 2
+        let frame = (NSScreen.main ?? NSScreen.screens.first)?.frame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+        let cx = frame.midX - size / 2
+        let cy = frame.midY - size / 2
 
         label = NSTextField(labelWithString: "\(seconds)")
         label.font = .monospacedDigitSystemFont(ofSize: 120, weight: .bold)
@@ -103,6 +104,8 @@ private final class CountdownWindow: NSWindow {
     }
 
     func dismiss(finished: Bool) {
+        guard !dismissed else { return }   // final tick + Esc can both call this — fire once
+        dismissed = true
         timer?.invalidate()
         timer = nil
         if let m = escMonitor { NSEvent.removeMonitor(m); escMonitor = nil }

@@ -126,7 +126,12 @@ public final class OverlayController {
                 save.nameFieldStringValue = "screenshot.png"
                 save.begin { [result] response in
                     guard response == .OK, let dest = save.url else { return }
-                    writePNG(result.image, to: dest)
+                    if !writePNG(result.image, to: dest) {
+                        let a = NSAlert()
+                        a.messageText = "Couldn’t save the image"
+                        a.informativeText = "Try a different location."
+                        a.runModal()
+                    }
                 }
             }
 
@@ -160,10 +165,11 @@ public final class OverlayController {
 
 // MARK: - PNG helper
 
-private func writePNG(_ image: CGImage, to url: URL) {
+@discardableResult
+private func writePNG(_ image: CGImage, to url: URL) -> Bool {
     guard let dest = CGImageDestinationCreateWithURL(
         url as CFURL, UTType.png.identifier as CFString, 1, nil
-    ) else { return }
+    ) else { return false }
     CGImageDestinationAddImage(dest, image, nil)
-    CGImageDestinationFinalize(dest)
+    return CGImageDestinationFinalize(dest)
 }

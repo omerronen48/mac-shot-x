@@ -21,13 +21,22 @@ final class HotkeyManager {
                             &eventHandlerRef)
     }
 
-    func register(_ spec: HotkeySpec, id: UInt32, handler: @escaping () -> Void) {
+    /// Returns false when the OS refuses the hotkey (e.g. already claimed by another app) —
+    /// previously this failed silently, so the user set a shortcut that did nothing.
+    @discardableResult
+    func register(_ spec: HotkeySpec, id: UInt32, handler: @escaping () -> Void) -> Bool {
         var ref: EventHotKeyRef?
         let hkID = EventHotKeyID(signature: fourCharCode("MSHT"), id: id)
-        RegisterEventHotKey(spec.keyCode, spec.carbonModifierMask,
-                            hkID, GetApplicationEventTarget(), 0, &ref)
-        if let ref { refs[id] = ref }
+        let status = RegisterEventHotKey(spec.keyCode, spec.carbonModifierMask,
+                                         hkID, GetApplicationEventTarget(), 0, &ref)
+        guard status == noErr, let ref else {
+            NSLog("HotkeyManager: hotkey id=\(id) failed to register (status \(status)) — likely already in use by another app")
+            handlers[id] = handler   // keep the intent; re-register may succeed after unregisterAll
+            return false
+        }
+        refs[id] = ref
         handlers[id] = handler
+        return true
     }
 
     func unregisterAll() {

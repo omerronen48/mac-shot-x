@@ -12,6 +12,8 @@ final class EditorWindow: NSObject, NSWindowDelegate {
     private let base: CGImage
     private let vm: EditorViewModel
     private var didCopyOnExport = false
+    /// Fired on close so the owner can release this instance (avoids retaining every editor).
+    var onClose: (() -> Void)?
 
     init(base: CGImage, sink: SystemSink, preferences: Preferences) {
         self.sink = sink
@@ -34,7 +36,14 @@ final class EditorWindow: NSObject, NSWindowDelegate {
             let name = formatter.uniqueFilename(for: Date(), mode: "beautified") {
                 FileManager.default.fileExists(atPath: dir.appendingPathComponent($0).path)
             }
-            _ = try? self.sink.writePNG(out, suggestedName: name, inDirectory: dir)
+            do {
+                _ = try self.sink.writePNG(out, suggestedName: name, inDirectory: dir)
+            } catch {
+                let a = NSAlert()
+                a.messageText = "Couldn’t save the exported image"
+                a.informativeText = "Check your save folder in Preferences — it was still copied to the clipboard."
+                a.runModal()
+            }
             self.window?.close()
         }
 
@@ -73,5 +82,6 @@ final class EditorWindow: NSObject, NSWindowDelegate {
             sink.copyToClipboard(flattened())
         }
         window = nil
+        onClose?()   // let the owner drop its reference (no editor-window leak)
     }
 }

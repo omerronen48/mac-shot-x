@@ -326,7 +326,9 @@ struct PreferencesView: View {
                 HStack {
                     TextField("Icon symbol", text: $model.menuBarIconSymbol)
                         .onSubmit { model.commitMenuBarIconSymbol(model.menuBarIconSymbol) }
-                    Image(systemName: model.menuBarIconSymbol)
+                    // Fall back to a valid symbol so an invalid name shows something, not blank.
+                    Image(systemName: NSImage(systemSymbolName: model.menuBarIconSymbol, accessibilityDescription: nil) != nil
+                          ? model.menuBarIconSymbol : "camera.viewfinder")
                         .frame(width: 20)
                 }
 

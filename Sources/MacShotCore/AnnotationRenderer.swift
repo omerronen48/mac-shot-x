@@ -6,8 +6,11 @@ import Foundation
 public enum AnnotationRenderer {
     public static func flatten(base: CGImage, document: AnnotationDocument) -> CGImage {
         let w = base.width, h = base.height
-        let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
-            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        // Guard the context alloc — a very large base (tall scroll-stitch / multi-monitor Retina)
+        // can fail; return the un-annotated base rather than crashing on export.
+        guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return base }
         ctx.draw(base, in: CGRect(x: 0, y: 0, width: w, height: h))
         for a in document.annotations { draw(a, in: ctx, base: base) }
         return ctx.makeImage() ?? base

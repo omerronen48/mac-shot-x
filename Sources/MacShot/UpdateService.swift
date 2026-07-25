@@ -13,10 +13,18 @@ enum UpdateService {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
     }
 
+    /// Only download release assets served by GitHub — the URL comes from the API response,
+    /// so verify its host before fetching+opening (defense against a spoofed API response).
+    static func isTrustedGitHubHost(_ url: URL) -> Bool {
+        guard url.scheme?.lowercased() == "https", let host = url.host?.lowercased() else { return false }
+        return host == "github.com" || host == "objects.githubusercontent.com" || host.hasSuffix(".githubusercontent.com")
+    }
+
     static func latestRelease() async -> Release? {
         guard let url = URL(string: "https://api.github.com/repos/\(repo)/releases/latest") else { return nil }
         var req = URLRequest(url: url)
         req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        req.timeoutInterval = 15   // don't hang forever on a flaky network
         guard let (data, _) = try? await URLSession.shared.data(for: req),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let tag = json["tag_name"] as? String else { return nil }
@@ -35,7 +43,7 @@ enum UpdateService {
                 return
             }
             guard UpdateChecker.isNewer(rel.tag, than: currentVersion) else {
-                alert("You’re up to date", "MacShot \(currentVersion) is the latest version.")
+                alert("You’re up to date", "mac-shot-X \(currentVersion) is the latest version.")
                 return
             }
             let a = NSAlert()
@@ -52,16 +60,24 @@ enum UpdateService {
 
     /// Download the DMG to ~/Downloads and open it (mounts for drag-install).
     @MainActor static func downloadAndOpen(_ url: URL) {
+        guard isTrustedGitHubHost(url) else {
+            alert("Update blocked", "The update download URL is not a trusted GitHub host. Open the Releases page manually.")
+            return
+        }
         Task {
             let dest = FileManager.default.homeDirectoryForCurrentUser
-                .appendingPathComponent("Downloads/MacShot-update.dmg")
+                .appendingPathComponent("Downloads/mac-shot-X-update.dmg")
             guard let (tmp, _) = try? await URLSession.shared.download(from: url) else {
                 alert("Download failed", "Couldn’t download the update. Try the Releases page.")
                 return
             }
             try? FileManager.default.removeItem(at: dest)
-            try? FileManager.default.moveItem(at: tmp, to: dest)
-            NSWorkspace.shared.open(dest)   // mounts the DMG; user drags MacShot to Applications
+            do {
+                try FileManager.default.moveItem(at: tmp, to: dest)
+                NSWorkspace.shared.open(dest)   // mounts the DMG; user drags mac-shot-X to Applications
+            } catch {
+                NSWorkspace.shared.open(tmp)     // fall back to the just-downloaded temp file, never a stale one
+            }
         }
     }
 
