@@ -1,6 +1,6 @@
 cask "macshot" do
   version "0.1.0"
-  sha256 "05ab5fe2eda691992ab2b57aa11a2bd63690523131c4a4ea1e643a1be11c1147"
+  sha256 "897147bc52db5f935f2f25631f9dbdd2fb30a986ba28e8254e67299e92a4fb41"
 
   # Points at the DMG committed to the repo. For versioned releases, switch this to the
   # release asset, e.g.:
