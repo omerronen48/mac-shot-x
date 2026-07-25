@@ -78,7 +78,7 @@ bash Scripts/make_dmg.sh
 
 The script codesigns with your Developer ID, packages a DMG, submits to Apple Notary Service via `xcrun notarytool`, and staples the ticket. It **will not emit an unsigned DMG** — it exits 1 if either environment variable is unset.
 
-Drag `MacShot.dmg` → `/Applications` to install.
+Drag `mac-shot-x.dmg` → `/Applications` to install.
 
 ## Permissions
 
