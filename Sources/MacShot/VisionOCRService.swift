@@ -1,5 +1,5 @@
 import CoreGraphics
-import Vision
+@preconcurrency import Vision
 import MacShotCore
 
 struct VisionOCRService: OCRService {

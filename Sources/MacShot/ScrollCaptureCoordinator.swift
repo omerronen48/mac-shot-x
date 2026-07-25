@@ -1,7 +1,7 @@
 import AppKit
 import CoreGraphics
 import MacShotCore
-import ScreenCaptureKit
+@preconcurrency import ScreenCaptureKit
 
 @MainActor final class ScrollCaptureCoordinator {
     // ponytail: plain let — SCKScreenCapturer is a struct (Sendable); no nonisolated(unsafe) needed

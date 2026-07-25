@@ -1,7 +1,7 @@
 import AppKit
 import ImageIO
 import MacShotCore
-import ScreenCaptureKit
+@preconcurrency import ScreenCaptureKit
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {

@@ -1,7 +1,7 @@
 import AppKit
 import CoreGraphics
 import MacShotCore
-import ScreenCaptureKit
+@preconcurrency import ScreenCaptureKit
 
 enum CaptureError: Error {
     case permissionDenied
