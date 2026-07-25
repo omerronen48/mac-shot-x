@@ -98,4 +98,4 @@ Built: M7,M8,M9,M10,M11,M16,M17,M18. Skipped by user: M12,M13 (recording), M14 (
 ## Post-v2 additions
 | # | Phase | Status | Notes |
 |---|-------|--------|-------|
-| M19 | Area screen recording | planned | video-only MP4; area-only; SCStream+AVAssetWriter; stacks on main |
+| M19 | Area screen recording | done | video-only MP4; area-only; SCStream+AVAssetWriter; branch exec/m19-area-recording (8 tasks, all reviewed PASS, 151/0 core tests); NOT merged — awaits human smoke-test |
