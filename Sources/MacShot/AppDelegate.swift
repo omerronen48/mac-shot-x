@@ -22,6 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var scrollCoordinator: ScrollCaptureCoordinator?
     private let pinController = PinController()
     private var editorWindows: [EditorWindow] = [] // ponytail: retain open editors
+    private var recordingController: RecordingController?
 
     // ponytail: nonisolated(unsafe) lets us call the nonisolated async capture(_:at:) without
     // a Swift-6 "sending across isolation" error — CaptureEngine is not Sendable because
@@ -53,6 +54,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             notifier: notifier,
             permission: permissionFlow
         )
+        recordingController = RecordingController(overlay: overlay, permission: permissionFlow, notifier: notifier, prefs: prefs)
 
         // ponytail: literal default hotkey — no pref this milestone (YAGNI); CaptureMode.fullscreen used
         // as the mode slug since CaptureMode has no .scroll case; filename mode string is "scroll".
@@ -149,6 +151,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(menuItem(for: action))
         }
         menu.addItem(NSMenuItem(title: String(localized: "Scrolling Capture", bundle: .module), action: #selector(captureScrolling), keyEquivalent: ""))
+        let recordTitle = recordingController?.isRecording == true ? "Stop Recording" : "Record Area"
+        menu.addItem(NSMenuItem(title: recordTitle, action: #selector(toggleRecording), keyEquivalent: ""))
         menu.addItem(.separator())
         menu.addItem(withTitle: String(localized: "History…",     bundle: .module), action: #selector(openHistory),     keyEquivalent: "")
         menu.addItem(withTitle: String(localized: "Preferences…", bundle: .module), action: #selector(openPreferences), keyEquivalent: "")
@@ -171,6 +175,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func captureFullscreen() { runCapture(mode: .fullscreen(nil)) }
     @objc private func captureText()       { Task { await ocrCoordinator?.run() } }
     @objc private func captureScrolling()  { Task { await scrollCoordinator?.run() } }
+    @objc private func toggleRecording()   { recordingController?.toggle() }
     @objc private func openHistory()        { historyWindowController?.refresh(); historyWindowController?.show() }
     @objc private func openPreferences()   { prefsWindowController.show() }
     @objc private func quitApp()           { NSApp.terminate(nil) }
@@ -221,6 +226,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let spec = try? HotkeySpec(string: "⌃⌘⇧S") {
             hotkeyManager.register(spec, id: 7) { [weak self] in
                 Task { await self?.scrollCoordinator?.run() }
+            }
+        }
+        // id 8: Record Area hotkey — re-registered automatically via applyMenuBarSettings on prefs change.
+        if let spec = try? HotkeySpec(string: prefs.recordAreaHotkey) {
+            hotkeyManager.register(spec, id: 8) { [weak self] in
+                self?.recordingController?.toggle()
             }
         }
     }
@@ -290,6 +301,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                    width: f.width, height: f.height)
                 return (w.windowID, cocoa)
             }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // ponytail: best-effort flush — block briefly so a partial recording is finalised on quit.
+        let sem = DispatchSemaphore(value: 0)
+        Task { await recordingController?.stopIfRecording(); sem.signal() }
+        _ = sem.wait(timeout: .now() + 3)
     }
 
     // ponytail: bridge completion-handler API to async via continuation
