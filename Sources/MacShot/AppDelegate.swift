@@ -4,7 +4,7 @@ import MacShotCore
 @preconcurrency import ScreenCaptureKit
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // ponytail: single shared Preferences instance; capturer uses the same object so
     // cursor/downscale prefs are always in sync.
@@ -157,7 +157,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(withTitle: String(localized: "History…",     bundle: .module), action: #selector(openHistory),     keyEquivalent: "")
         menu.addItem(withTitle: String(localized: "Preferences…", bundle: .module), action: #selector(openPreferences), keyEquivalent: "")
         menu.addItem(withTitle: String(localized: "Quit",         bundle: .module), action: #selector(quitApp),          keyEquivalent: "")
+        menu.delegate = self
         statusItem?.menu = menu
+    }
+
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        // Refresh the Record/Stop title each time the menu opens.
+        let title = recordingController?.isRecording == true ? "Stop Recording" : "Record Area"
+        if let item = menu.items.first(where: { $0.action == #selector(toggleRecording) }) {
+            item.title = title
+        }
     }
 
     private func menuItem(for action: CaptureAction) -> NSMenuItem {
@@ -303,11 +312,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
     }
 
-    func applicationWillTerminate(_ notification: Notification) {
-        // ponytail: best-effort flush — block briefly so a partial recording is finalised on quit.
-        let sem = DispatchSemaphore(value: 0)
-        Task { await recordingController?.stopIfRecording(); sem.signal() }
-        _ = sem.wait(timeout: .now() + 3)
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard recordingController?.isRecording == true else { return .terminateNow }
+        // ponytail: terminateLater returns control to the run loop so the @MainActor stop can execute,
+        // then reply lets the app quit. Semaphore-based flush deadlocks because stopIfRecording() is
+        // @MainActor-isolated and applicationWillTerminate runs on the main actor.
+        Task { @MainActor in
+            await recordingController?.stopIfRecording()
+            sender.reply(toApplicationShouldTerminate: true)
+        }
+        return .terminateLater
     }
 
     // ponytail: bridge completion-handler API to async via continuation
