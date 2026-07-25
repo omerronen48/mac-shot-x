@@ -30,6 +30,7 @@ final class PreferencesModel: ObservableObject {
     @Published var hideMenuBarIcon: Bool
     @Published var menuOrder: MacShotCore.MenuOrder
     @Published var preferencesHotkey: String
+    @Published var recordAreaHotkey: String
 
     init() {
         let p = Preferences(store: UserDefaults.standard)
@@ -54,6 +55,7 @@ final class PreferencesModel: ObservableObject {
         hideMenuBarIcon      = p.hideMenuBarIcon
         menuOrder            = p.menuOrder
         preferencesHotkey    = p.preferencesHotkey
+        recordAreaHotkey     = p.recordAreaHotkey
     }
 
     /// Reload all @Published mirrors from UserDefaults (called after import).
@@ -79,6 +81,7 @@ final class PreferencesModel: ObservableObject {
         hideMenuBarIcon      = p.hideMenuBarIcon
         menuOrder            = p.menuOrder
         preferencesHotkey    = p.preferencesHotkey
+        recordAreaHotkey     = p.recordAreaHotkey
     }
 
     func setLaunchAtLogin(_ on: Bool) {
@@ -188,6 +191,12 @@ final class PreferencesModel: ObservableObject {
         onHotkeysChanged?()
         onSettingsChanged?()
     }
+
+    func recordRecordArea(_ spec: HotkeySpec) {
+        prefs.recordAreaHotkey = spec.description
+        recordAreaHotkey = spec.description
+        onHotkeysChanged?()
+    }
 }
 
 struct PreferencesView: View {
@@ -260,6 +269,9 @@ struct PreferencesView: View {
                 }
                 hotkeyRow(label: "OCR capture") {
                     HotkeyRecorderField(current: model.ocrHotkey) { model.recordOCR($0) }
+                }
+                hotkeyRow(label: "Record Area") {
+                    HotkeyRecorderField(current: model.recordAreaHotkey) { model.recordRecordArea($0) }
                 }
             }
 
