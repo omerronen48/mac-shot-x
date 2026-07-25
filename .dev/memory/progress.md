@@ -94,3 +94,8 @@ Stacked branches M1→M2→M3→M4→M5→M6 off `master` (untouched). Human int
 
 ## v2 COMPLETE (2026-07-24)
 Built: M7,M8,M9,M10,M11,M16,M17,M18. Skipped by user: M12,M13 (recording), M14 (cloud), M15 (translation). Linear stack M1–M6(main) → M7 → M8 → M9 → M10 → M11 → M16 → M17 → M18. Human merges the stack. Loop disarmed.
+
+## Post-v2 additions
+| # | Phase | Status | Notes |
+|---|-------|--------|-------|
+| M19 | Area screen recording | planned | video-only MP4; area-only; SCStream+AVAssetWriter; stacks on main |

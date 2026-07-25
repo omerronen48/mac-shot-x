@@ -44,3 +44,5 @@
 - **Scrolling capture** — auto-scroll a window while capturing frames, then stitch into a single tall screenshot (ScrollCaptureCoordinator).
 - **LocalizationAudit** — pure MacShotCore check that finds required keys missing a base or starter-language translation in the .xcstrings catalog (CI guard).
 - **Localizable.xcstrings** — the String Catalog: base English + starter languages (es/fr/de) for a curated key set.
+- **AreaRecorder** — SCStream(sourceRect=area, no audio) → AVAssetWriter H.264 MP4 pipeline (MacShot shell); records a selected screen area to video.
+- **RecordingState** — pure MacShotCore model: idle/recording + elapsed seconds (the only headless-testable recording logic).
