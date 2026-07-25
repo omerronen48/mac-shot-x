@@ -1,9 +1,8 @@
 cask "macshot" do
   version "0.2.0"
-  # The DMG is published as a GitHub Release asset by .github/workflows/release.yml on a `v*`
-  # tag — NOT committed to the repo. Pin a real sha256 per release once published; :no_check
-  # lets the cask resolve before the first release exists.
-  sha256 :no_check
+  # DMG is a GitHub Release asset built by .github/workflows/release.yml on a `v*` tag
+  # (not committed to the repo). Update version + sha256 for each new release.
+  sha256 "faabe096485ce1a2fc1304f58f1f148549dd05a598d4baea453b77f71c1c2bf5"
 
   url "https://github.com/omerronen48/mac-shot-x/releases/download/v#{version}/mac-shot-x.dmg"
   name "mac-shot-X"
