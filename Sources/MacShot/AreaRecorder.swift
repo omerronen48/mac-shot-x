@@ -35,12 +35,21 @@ final class AreaRecorder: NSObject, SCStreamOutput, @unchecked Sendable {
 
         // AVAssetWriter pipeline
         let writer = try AVAssetWriter(url: url, fileType: .mp4)
+        // Screen content (sharp text/edges) needs a far higher bitrate than AVFoundation's
+        // photographic default. ~0.4 bits/pixel/frame keeps text crisp; scales with the area.
+        // ponytail: 0.4 bpp is the quality knob — raise for pixel-perfect, lower for smaller files.
+        let bitRate = Int(Double(config.width * config.height * 30) * 0.4)
         let videoInput = AVAssetWriterInput(
             mediaType: .video,
             outputSettings: [
                 AVVideoCodecKey:  AVVideoCodecType.h264,
                 AVVideoWidthKey:  config.width,
-                AVVideoHeightKey: config.height
+                AVVideoHeightKey: config.height,
+                AVVideoCompressionPropertiesKey: [
+                    AVVideoAverageBitRateKey: bitRate,
+                    AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
+                    AVVideoMaxKeyFrameIntervalKey: 60
+                ] as [String: Any]
             ]
         )
         videoInput.expectsMediaDataInRealTime = true
