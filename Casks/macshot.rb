@@ -1,12 +1,12 @@
 cask "macshot" do
-  version "0.1.0"
-  sha256 "897147bc52db5f935f2f25631f9dbdd2fb30a986ba28e8254e67299e92a4fb41"
+  version "0.2.0"
+  # The DMG is published as a GitHub Release asset by .github/workflows/release.yml on a `v*`
+  # tag — NOT committed to the repo. Pin a real sha256 per release once published; :no_check
+  # lets the cask resolve before the first release exists.
+  sha256 :no_check
 
-  # Points at the DMG committed to the repo. For versioned releases, switch this to the
-  # release asset, e.g.:
-  #   url "https://github.com/omerronen48/mac-shot-x/releases/download/v#{version}/MacShot.dmg"
-  url "https://github.com/omerronen48/mac-shot-x/raw/main/MacShot.dmg"
-  name "MacShot"
+  url "https://github.com/omerronen48/mac-shot-x/releases/download/v#{version}/mac-shot-x.dmg"
+  name "mac-shot-X"
   desc "Native macOS screenshot tool — capture, overlay, annotate, beautify, OCR"
   homepage "https://github.com/omerronen48/mac-shot-x"
 
@@ -14,9 +14,9 @@ cask "macshot" do
 
   app "mac-shot-X.app"
 
-  # MacShot needs Screen Recording permission; grant it on first capture.
+  # mac-shot-X needs Screen Recording permission; grant it on first capture.
   caveats <<~EOS
-    On first launch, grant MacShot the Screen Recording permission when prompted
+    On first launch, grant mac-shot-X the Screen Recording permission when prompted
     (System Settings → Privacy & Security → Screen Recording), then relaunch.
   EOS
 

@@ -25,9 +25,9 @@ jobs:
       - name: Upload DMG as a release asset
         uses: softprops/action-gh-release@v2
         with:
-          files: MacShot.dmg
+          files: mac-shot-x.dmg
       - name: Also upload as a build artifact
         uses: actions/upload-artifact@v4
         with:
           name: MacShot-dmg
-          path: MacShot.dmg
+          path: mac-shot-x.dmg

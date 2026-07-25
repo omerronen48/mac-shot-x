@@ -17,36 +17,31 @@ A free, native, on-device macOS screenshot tool. Runs in the menu bar — no doc
 
 ## Install
 
-**One-line install** (downloads + installs to /Applications, no clone needed):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/omerronen48/mac-shot-x/main/Scripts/install.sh | bash
-```
-
-**Homebrew** (the repo doubles as a tap):
+**Homebrew** (recommended) — the repo doubles as a tap:
 
 ```bash
 brew tap omerronen48/mac-shot-x https://github.com/omerronen48/mac-shot-x
 brew install --cask macshot
 ```
 
-**Direct download** — grab **[`MacShot.dmg`](https://github.com/omerronen48/mac-shot-x/raw/main/MacShot.dmg)**,
-open it, and drag **MacShot** into **Applications**.
+**Or download the DMG** from the [**Releases**](https://github.com/omerronen48/mac-shot-x/releases/latest)
+page, open it, and drag **mac-shot-X** into **Applications**.
 
-It is signed but not notarized, so if macOS blocks the first launch, **right-click → Open**
-(the one-line installer clears the quarantine flag for you). Then grant **Screen Recording**
-when prompted.
+Builds are signed but not notarized, so if macOS blocks the first launch, **right-click → Open**.
+Then grant **Screen Recording** when prompted. The DMG is a GitHub Release asset (published by CI
+on a `v*` tag) — it is not committed to the repository.
 
 ### Updating & startup
 
 - **Check for Updates** — Preferences → *Updates* → "Check for Updates…" compares your version
   against the latest GitHub release and offers to download the new DMG (only on your click; no
   background network).
-- **Launch at login** — Preferences → *Behaviour* → "Launch at login" registers MacShot as a
+- **Launch at login** — Preferences → *Behaviour* → "Launch at login" registers mac-shot-X as a
   macOS login item so it starts with your session.
 
-Rebuild the DMG yourself with `bash Scripts/make_dmg.sh`. Tagging a release (`v*`) publishes a
-fresh DMG via GitHub Actions (`.github/workflows/release.yml`).
+Maintainers: `git tag v0.2.0 && git push origin v0.2.0` triggers `.github/workflows/release.yml`,
+which builds `mac-shot-x.dmg` and attaches it to the Release (build locally with
+`bash Scripts/make_dmg.sh`).
 
 ## Build from Source
 
