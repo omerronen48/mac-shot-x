@@ -11,7 +11,7 @@ public struct FilenameFormatter {
 
     private static let illegal = CharacterSet(charactersIn: "/\\:*?\"<>|")
 
-    public func filename(for date: Date, mode: String) -> String {
+    public func filename(for date: Date, mode: String, ext: String = "png") -> String {
         let df = DateFormatter(); df.calendar = calendar; df.timeZone = calendar.timeZone; df.locale = Locale(identifier: "en_US_POSIX")
         df.dateFormat = "yyyy-MM-dd"; let d = df.string(from: date)
         df.dateFormat = "HH-mm-ss";   let t = df.string(from: date)
@@ -20,16 +20,16 @@ public struct FilenameFormatter {
             .replacingOccurrences(of: "{time}", with: t)
             .replacingOccurrences(of: "{mode}", with: mode)
         s = String(s.unicodeScalars.map { Self.illegal.contains($0) ? Character("-") : Character($0) })
-        return s.isEmpty ? "Screenshot.png" : s + ".png"
+        return s.isEmpty ? "Screenshot.\(ext)" : s + ".\(ext)"
     }
 
     /// Appends " (n)" until `isTaken` returns false.
-    public func uniqueFilename(for date: Date, mode: String, isTaken: (String) -> Bool) -> String {
-        let base = filename(for: date, mode: mode)
+    public func uniqueFilename(for date: Date, mode: String, ext: String = "png", isTaken: (String) -> Bool) -> String {
+        let base = filename(for: date, mode: mode, ext: ext)
         if !isTaken(base) { return base }
-        let stem = String(base.dropLast(4)) // strip .png
+        let stem = String(base.dropLast(ext.count + 1)) // strip .<ext>
         var n = 1
-        while isTaken("\(stem) (\(n)).png") { n += 1 }
-        return "\(stem) (\(n)).png"
+        while isTaken("\(stem) (\(n)).\(ext)") { n += 1 }
+        return "\(stem) (\(n)).\(ext)"
     }
 }
