@@ -8,3 +8,4 @@ mac-shot-X.app/
 *.dmg
 Scripts/AppIcon.icns
 Scripts/AppIcon.iconset/
+.tokensave

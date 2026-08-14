@@ -82,6 +82,11 @@ private final class OverlayWindow: NSWindow {
         contentView = view
         makeFirstResponder(view)
     }
+
+    // Borderless windows default canBecomeKey=false → keyDown never delivered.
+    // Override so Esc (cancel) and Space (move) reach the overlay view.
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
 }
 
 // MARK: - Overlay NSView
