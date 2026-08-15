@@ -33,8 +33,15 @@ public final class SelectionOverlay {
                 self?.finish(result)
             }
             overlayWindows.append(ow)
-            ow.makeKeyAndOrderFront(nil)
+            ow.orderFront(nil)
         }
+        // Menu-bar app isn't frontmost at capture time, and a key window only
+        // receives keyDown while its app is active. Activate, then make just the
+        // window under the cursor key — so Esc cancels, and we avoid the per-screen
+        // key-transition stall that made makeKeyAndOrderFront-in-a-loop lag.
+        NSApp.activate(ignoringOtherApps: true)
+        let mouse = NSEvent.mouseLocation
+        (overlayWindows.first { $0.frame.contains(mouse) } ?? overlayWindows.first)?.makeKey()
     }
 
     private func finish(_ result: CaptureMode?) {
