@@ -1,5 +1,5 @@
 cask "mac-shot-x" do
-  version "0.2.4"
+  version "0.2.5"
   # DMG is a GitHub Release asset built by .github/workflows/release.yml on a `v*` tag
   # (not committed to the repo). Update version + sha256 for each new release.
   sha256 "fee3fd83e02933fb074be29fe1a441a1606a71a20185b316ed3cc1dbc8006a17"
